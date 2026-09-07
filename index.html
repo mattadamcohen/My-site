@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Family Rhythm — Olivia & Josh</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Karla:wght@400;500;700&display=swap');
+
+:root{
+  --bg:#FFF4E0;
+  --paper:#FFFFFF;
+  --line:#FFD9A8;
+  --ink:#241A3D;
+  --ink-soft:#6E5F8C;
+  --mom:#FF5A7A; --mom-tint:#FFE0E7; --mom-deep:#A3103A;
+  --dad:#00B7B0; --dad-tint:#D7FBF7; --dad-deep:#00615C;
+  --gaga:#FFB000; --gaga-tint:#FFEFC2; --gaga-deep:#8A5900;
+  --granny:#A855F7; --granny-tint:#F2E3FF; --granny-deep:#5B1A9C;
+  --closed:#FF4D6D; --closed-tint:#FFE1E7;
+  --camp:#3AA0FF; --camp-tint:#DCEFFF;
+  --noact:#FFB300; --noact-tint:#FFF0CC;
+  --open:#22C55E; --open-tint:#DDFAE6;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:'Karla',Arial,sans-serif; padding:28px 20px 60px;
+}
+h1,h2,h3{ font-family:'Fraunces',Georgia,serif; font-weight:600; margin:0; }
+.wrap{ max-width:1080px; margin:0 auto; }
+.top{ display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; margin-bottom:22px;}
+.top h1{
+  font-size:34px; letter-spacing:0.2px;
+  background:linear-gradient(90deg,#FF5A7A 0%,#A855F7 45%,#00B7B0 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.top p{ margin:4px 0 0; color:var(--ink-soft); font-size:14px;}
+.kidtabs{ display:flex; gap:8px; }
+.kidtab{
+  padding:9px 20px; border-radius:999px; border:1.5px solid var(--line);
+  background:var(--paper); font-family:'Karla'; font-weight:700; font-size:14px;
+  cursor:pointer; color:var(--ink-soft); transition:all .15s ease;
+}
+.kidtab.active{ background:var(--granny); color:#fff; border-color:var(--granny);}
+.subnav{ display:flex; gap:6px; margin-bottom:20px; border-bottom:2px solid var(--line); }
+.subnav button{
+  background:none; border:none; padding:10px 4px; margin-right:22px; font-size:15px;
+  font-family:'Karla'; font-weight:700; color:var(--ink-soft); cursor:pointer;
+  border-bottom:3px solid transparent; margin-bottom:-2px;
+}
+.subnav button.active{ color:var(--dad-deep); border-bottom-color:var(--dad); }
+.view{ display:none; }
+.view.active{ display:block; }
+
+.banner{
+  background:var(--gaga-tint); border:1px solid var(--gaga); border-radius:10px;
+  padding:12px 16px; font-size:14px; margin-bottom:20px; color:var(--gaga-deep);
+}
+.banner b{ color:var(--gaga-deep); }
+
+.weekgrid{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+@media (max-width:860px){ .weekgrid{ grid-template-columns:1fr 1fr; } }
+.daycard{
+  background:var(--paper); border:1px solid var(--line); border-radius:14px;
+  padding:14px; display:flex; flex-direction:column; gap:10px; min-height:230px;
+}
+.daycard h3{ font-size:17px; }
+.daycard .heb{ font-size:13px; color:var(--ink-soft); margin-top:2px; }
+.caregivers{ display:flex; flex-wrap:wrap; gap:5px; }
+.cgchip{
+  font-size:12px; font-weight:700; padding:4px 9px; border-radius:999px;
+  cursor:pointer; border:1px solid transparent; user-select:none;
+}
+.cgchip.on.mom{ background:var(--mom); color:#fff; }
+.cgchip.on.dad{ background:var(--dad); color:#fff; }
+.cgchip.on.gaga{ background:var(--gaga); color:#fff; }
+.cgchip.on.granny{ background:var(--granny); color:#fff; }
+.cgchip.off{ background:var(--bg); color:var(--ink-soft); border:1px dashed var(--line); }
+
+.field-label{ font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft); font-weight:700; margin-bottom:2px; }
+input.hourbox, textarea.notebox{
+  width:100%; border:1px solid var(--line); border-radius:8px; padding:6px 8px;
+  font-family:'Karla'; font-size:13px; background:var(--bg); color:var(--ink);
+}
+textarea.notebox{ resize:vertical; min-height:38px; }
+
+.activities{ display:flex; flex-direction:column; gap:6px; flex:1; }
+.actchip{
+  display:flex; justify-content:space-between; align-items:center; gap:6px;
+  background:var(--open-tint); border:1px solid var(--open); color:#2C5C2E;
+  border-radius:8px; padding:5px 9px; font-size:12.5px; font-weight:700;
+}
+.actchip .rm{ cursor:pointer; opacity:0.6; font-weight:700; }
+.actchip .rm:hover{ opacity:1; }
+.addbtn{
+  border:1.5px dashed var(--line); background:none; border-radius:8px;
+  padding:6px; font-size:12.5px; font-weight:700; color:var(--ink-soft);
+  cursor:pointer; font-family:'Karla';
+}
+.addbtn:hover{ background:var(--bg); }
+
+.overlay{
+  position:fixed; inset:0; background:rgba(43,42,40,0.45); display:none;
+  align-items:center; justify-content:center; z-index:50; padding:20px;
+}
+.overlay.show{ display:flex; }
+.modal{
+  background:var(--paper); border-radius:16px; max-width:480px; width:100%;
+  max-height:82vh; overflow:auto; padding:20px 22px; border:1px solid var(--line);
+}
+.modal h3{ font-size:18px; margin-bottom:4px;}
+.modal .sub{ color:var(--ink-soft); font-size:13px; margin-bottom:14px; }
+.menuitem{
+  border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:8px;
+}
+.menuitem .nm{ font-weight:700; font-size:14px; display:flex; align-items:center; gap:6px;}
+.heart{ color:var(--mom); font-size:12px; }
+.slotrow{
+  display:flex; justify-content:space-between; align-items:center; gap:8px;
+  padding:5px 0; font-size:13px; border-top:1px dashed var(--line); margin-top:5px;
+}
+.slotrow:first-of-type{ border-top:none; margin-top:6px; }
+.slotpick{
+  border:1px solid var(--dad); color:var(--dad-deep); background:var(--dad-tint);
+  border-radius:7px; padding:4px 10px; font-size:12px; font-weight:700; cursor:pointer;
+  font-family:'Karla';
+}
+.slotpick:hover{ filter:brightness(0.95); }
+.closemodal{
+  margin-top:14px; width:100%; padding:9px; border-radius:9px; border:1px solid var(--line);
+  background:var(--bg); font-weight:700; cursor:pointer; font-family:'Karla';
+}
+
+.legend{ display:flex; gap:14px; flex-wrap:wrap; margin-bottom:16px; font-size:12.5px; color:var(--ink-soft); }
+.legend span{ display:inline-flex; align-items:center; gap:6px; }
+.dot{ width:11px; height:11px; border-radius:3px; display:inline-block; }
+.calnav{ display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+.calnav button{
+  border:1px solid var(--line); background:var(--paper); border-radius:8px; padding:6px 12px;
+  cursor:pointer; font-family:'Karla'; font-weight:700;
+}
+.calnav .label{ font-family:'Fraunces'; font-size:19px; font-weight:600; }
+.calgrid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+.calhead{ font-size:11px; font-weight:700; color:var(--ink-soft); text-align:center; padding-bottom:4px; }
+.calday{
+  background:var(--paper); border:1px solid var(--line); border-radius:9px;
+  min-height:64px; padding:6px; font-size:12px; cursor:default; position:relative;
+}
+.calday.blank{ background:transparent; border:none; }
+.calday .num{ font-weight:700; font-size:12.5px; }
+.calday.closed{ background:var(--closed-tint); border-color:var(--closed); }
+.calday.camp{ background:var(--camp-tint); border-color:var(--camp); }
+.calday.noact{ background:var(--noact-tint); border-color:var(--noact); }
+.calday.open{ background:var(--open-tint); border-color:var(--open); }
+.calday .tag{ font-size:10px; font-weight:700; display:block; margin-top:3px; line-height:1.25; }
+.detailbox{
+  margin-top:16px; background:var(--paper); border:1px solid var(--line); border-radius:12px;
+  padding:14px 16px; font-size:13.5px; min-height:20px;
+}
+.detailbox b{ font-family:'Fraunces'; font-size:15px; }
+
+.menuref{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+@media (max-width:860px){ .menuref{ grid-template-columns:1fr 1fr; } }
+.menuref .col h3{ font-size:15px; margin-bottom:8px; }
+
+.hint{ font-size:12.5px; color:var(--ink-soft); margin-top:16px; }
+.contactcard{
+  background:var(--paper); border:1px solid var(--line); border-radius:12px;
+  padding:12px 14px; margin-bottom:8px; display:flex; justify-content:space-between;
+  align-items:center; gap:10px; flex-wrap:wrap;
+}
+.contactcard .kidname{ font-weight:700; font-size:14.5px; }
+.contactcard .family{ color:var(--ink-soft); font-size:12.5px; }
+.contactcard .parents{ display:flex; gap:16px; flex-wrap:wrap; }
+.contactcard .parent{ font-size:13px; }
+.contactcard .parent a{ color:var(--dad-deep); text-decoration:none; font-weight:700; }
+.contactcard .parent a:hover{ text-decoration:underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div>
+      <h1>Family rhythm</h1>
+      <p>Olivia & Josh — school, holidays, grandmothers, and activities in one place</p>
+    </div>
+    <div class="kidtabs">
+      <button class="kidtab active" data-kid="olivia">Olivia</button>
+      <button class="kidtab" data-kid="josh">Josh</button>
+    </div>
+  </div>
+
+  <div class="subnav">
+    <button class="active" data-view="weekly">Weekly rhythm</button>
+    <button data-view="calendar">Holiday calendar</button>
+    <button data-view="menu" id="menuNavBtn">Activity menu</button>
+    <button data-view="contacts" id="contactsNavBtn">Class contacts</button>
+  </div>
+
+  <div id="weeklyView" class="view active">
+    <div class="banner" id="trialBanner"></div>
+    <div class="weekgrid" id="weekGrid"></div>
+    <p class="hint">Fri & Sat aren't tracked here (weekend). Tap a caregiver chip to toggle who's around that day.</p>
+  </div>
+
+  <div id="calendarView" class="view">
+    <div class="legend">
+      <span><i class="dot" style="background:var(--closed)"></i> Closed / holiday</span>
+      <span><i class="dot" style="background:var(--camp)"></i> Camp / extended activities</span>
+      <span><i class="dot" style="background:var(--noact)"></i> Open, but no after-school activities</span>
+      <span><i class="dot" style="background:var(--open)"></i> Regular day</span>
+    </div>
+    <div class="calnav">
+      <button id="prevMonth">&larr;</button>
+      <div class="label" id="monthLabel"></div>
+      <button id="nextMonth">&rarr;</button>
+    </div>
+    <div class="calgrid" id="calGrid"></div>
+    <div class="detailbox" id="calDetail">Click a highlighted day to see details.</div>
+  </div>
+
+  <div id="menuView" class="view">
+    <p class="hint" style="margin-top:0;">Full צהרון menu, by day. Hearts (♥) mean it's included in the free activity package. Tap a time slot to add it to that weekday.</p>
+    <div class="menuref" id="menuRef"></div>
+  </div>
+
+  <div id="contactsView" class="view">
+    <p class="hint" style="margin-top:0;">Olivia's class contacts — for arranging playdates. Only names and phone numbers are kept here; double-check a number before relying on it.</p>
+    <input class="hourbox" id="contactSearch" placeholder="Search by child or family name" style="max-width:320px; margin-bottom:16px;">
+    <div id="contactList"></div>
+  </div>
+
+</div>
+
+<div class="overlay" id="modalOverlay">
+  <div class="modal" id="modalBody"></div>
+</div>
+
+<script>
+const DAY_NAMES = [
+  {en:'Sunday', he:'ראשון'},
+  {en:'Monday', he:'שני'},
+  {en:'Tuesday', he:'שלישי'},
+  {en:'Wednesday', he:'רביעי'},
+  {en:'Thursday', he:'חמישי'}
+];
+
+const CAREGIVERS = {
+  mom:{label:'Mom'}, dad:{label:'Dad'}, gaga:{label:'Gaga'}, granny:{label:'Granny'}
+};
+
+const DEFAULT_CAREGIVERS = {0:['dad'],1:['granny'],2:['mom'],3:['gaga','dad'],4:['mom']};
+
+const OLIVIA_MENU = {
+  0:[
+    {name:'כדורגל (Football)', heart:false, slots:[{t:'13:30–15:00', g:'ג׳'},{t:'15:00–16:30', g:'א׳'}]},
+    {name:'כדורסל בנות (Girls basketball)', heart:false, slots:[{t:'13:30–14:30', g:'ג׳-ד׳'},{t:'14:30–15:30', g:'א׳-ב׳'}]},
+    {name:'תכשיטנות ויצירה (Jewelry & crafts)', heart:false, slots:[{t:'13:30–14:30', g:'א׳-ג׳'}]},
+    {name:'שחמט (Chess)', heart:true, slots:[{t:'13:30–14:10', g:'א׳'},{t:'14:10–14:50', g:'ב׳-ד׳'}]},
+    {name:'זומבה / היפ הופ (Zumba / hip hop)', heart:true, slots:[{t:'14:30–15:15', g:'א׳'},{t:'15:15–16:00', g:'ב׳-ד׳'}]}
+  ],
+  1:[
+    {name:'כדורסל בנים (Boys basketball)', heart:false, slots:[{t:'13:30–14:30', g:'א׳-ב׳'},{t:'14:30–15:30', g:'ג׳-ד׳'}]},
+    {name:'טריניריה (Trinireya)', heart:false, slots:[{t:'13:30–14:15', g:'ב׳-ו׳'},{t:'14:15–15:00', g:'א׳'}]},
+    {name:'טאקוונדו (Taekwondo)', heart:false, slots:[{t:'13:30–14:30', g:'מתקדמים'},{t:'14:30–15:15', g:'מתחילים'}]},
+    {name:'אמנות (Art — Niki, outside school)', heart:false, external:true, slots:[{t:'15:00–16:30', g:''},{t:'16:30–18:00', g:''}]}
+  ],
+  2:[
+    {name:'כדורעף (Volleyball)', heart:true, slots:[{t:'14:00–14:50', g:'א׳-ג׳'},{t:'15:15–16:00', g:'ד׳-ו׳'}]},
+    {name:'ג׳אולינה (Jaulina)', heart:true, slots:[{t:'13:30–14:10', g:'א׳'},{t:'14:10–14:50', g:'ב׳-ג׳'}]},
+    {name:'אנגלית (English)', heart:false, slots:[{t:'13:30–14:15', g:'ג׳'},{t:'14:15–15:00', g:'א׳-ב׳'}]},
+    {name:'מדע ורפואה (Science & medicine)', heart:false, slots:[{t:'14:00–14:45', g:'א׳-ג׳'}]},
+    {name:'אמנות (Art — Niki, outside school)', heart:false, external:true, slots:[{t:'15:00–16:30', g:''},{t:'16:30–18:00', g:''}]}
+  ],
+  3:[
+    {name:'כדורסל בנות (Girls basketball)', heart:false, slots:[{t:'13:30–14:30', g:'ג׳-ד׳'},{t:'14:30–15:30', g:'ב׳'}]},
+    {name:'כדורגל (Football)', heart:false, slots:[{t:'13:30–15:00', g:'ב׳'},{t:'15:00–16:30', g:'ד׳-ו׳'}]},
+    {name:'גומיקלאי (Gumiklai)', heart:false, slots:[{t:'13:30–14:15', g:'א׳-ד׳'}]},
+    {name:'בובקאות (Bubkaot)', heart:false, slots:[{t:'14:45–15:45', g:'א׳-ג׳'}]},
+    {name:'אלקטרוניקה (Electronics)', heart:false, slots:[{t:'15:10–15:55', g:'א׳-ו׳'}]},
+    {name:'ספורט חברתי (Social sport)', heart:true, slots:[{t:'15:00–15:45', g:'ב׳-ג׳'},{t:'15:45–16:30', g:'א׳'}]}
+  ],
+  4:[
+    {name:'כדורסל בנים (Boys basketball)', heart:false, slots:[{t:'13:30–14:30', g:'א׳-ב׳'},{t:'14:30–15:30', g:'ג׳-ד׳'}]},
+    {name:'פיקאבו (Peekaboo)', heart:true, slots:[{t:'13:30–14:15', g:'ג׳-ה׳'},{t:'14:15–15:00', g:'א׳-ב׳'}]},
+    {name:'מהנדסי הדור הבא (Next-gen engineers)', heart:true, slots:[{t:'13:45–14:30', g:'ב׳-ג׳'},{t:'14:30–15:15', g:'א׳'}]},
+    {name:'הייטק AI (AI hi-tech)', heart:false, slots:[{t:'13:30–14:30', g:'א׳-ג׳'},{t:'14:30–15:30', g:'ד׳-ו׳'}]}
+  ]
+};
+
+const OLIVIA_HOLIDAYS = [
+  {s:'2026-09-11',e:'2026-09-13',en:'Rosh Hashana',he:'ראש השנה',type:'closed'},
+  {s:'2026-09-20',e:'2026-09-21',en:'Yom Kippur',he:'יום כיפור',type:'closed'},
+  {s:'2026-09-22',e:'2026-09-24',en:'Camp between holidays',he:'קייטנת גשר',type:'camp',hours:'8:00–16:30'},
+  {s:'2026-09-25',e:'2026-10-03',en:'Sukkot',he:'חג הסוכות',type:'closed'},
+  {s:'2026-10-27',e:'2026-10-27',en:'Election day',he:'יום בחירות',type:'closed'},
+  {s:'2026-12-06',e:'2026-12-10',en:'Hanukkah camp',he:'קייטנת חנוכה',type:'camp',hours:'8:00–16:30'},
+  {s:'2027-03-23',e:'2027-03-23',en:'Purim',he:'פורים',type:'closed'},
+  {s:'2027-03-24',e:'2027-03-24',en:'Shushan Purim camp',he:'קייטנת שושן פורים',type:'camp',hours:'8:00–16:30'},
+  {s:'2027-04-13',e:'2027-04-15',en:'Passover camp',he:'קייטנת פסח',type:'camp',hours:'8:00–16:30'},
+  {s:'2027-04-18',e:'2027-04-19',en:'Passover camp',he:'קייטנת פסח',type:'camp',hours:'8:00–16:30'},
+  {s:'2027-04-20',e:'2027-04-28',en:'Passover',he:'חופשת פסח',type:'closed'},
+  {s:'2027-05-11',e:'2027-05-11',en:"Memorial Day eve — no activities",he:'ערב יום הזיכרון',type:'noact'},
+  {s:'2027-05-12',e:'2027-05-12',en:'Independence Day',he:'יום העצמאות',type:'closed'},
+  {s:'2027-06-10',e:'2027-06-11',en:'Shavuot',he:'חג השבועות',type:'closed'}
+];
+
+const JOSH_HOLIDAYS = [
+  {s:'2026-09-01',e:'2026-09-01',en:'School year opens',he:'פתיחת שנה',type:'open'},
+  {s:'2026-09-11',e:'2026-09-13',en:'Rosh Hashana',he:'ראש השנה',type:'closed'},
+  {s:'2026-09-20',e:'2026-09-21',en:'Yom Kippur',he:'יום כיפור',type:'closed'},
+  {s:'2026-09-22',e:'2026-09-24',en:"Yal'a activities",he:'פעילות יל"א',type:'camp',hours:'7:10–16:30'},
+  {s:'2026-09-25',e:'2026-09-25',en:'Sukkot',he:'חג הסוכות',type:'closed'},
+  {s:'2026-09-27',e:'2026-09-28',en:"Yal'a activities",he:'פעילות יל"א',type:'camp',hours:'7:10–16:30'},
+  {s:'2026-09-29',e:'2026-10-03',en:"Chol HaMoed / Simchat Torah",he:'חוה"מ / שמחת תורה',type:'closed'},
+  {s:'2026-10-27',e:'2026-10-27',en:'Election day',he:'יום בחירות',type:'closed'},
+  {s:'2026-12-06',e:'2026-12-10',en:"Hanukkah — Yal'a activities",he:'חנוכה - יל"א',type:'camp',hours:'7:10–16:30'},
+  {s:'2026-12-11',e:'2026-12-11',en:'Hanukkah',he:'חנוכה',type:'closed'},
+  {s:'2027-03-23',e:'2027-03-23',en:'Purim',he:'פורים',type:'closed'},
+  {s:'2027-03-24',e:'2027-03-24',en:"Purim — Yal'a activities",he:'פורים - יל"א',type:'camp',hours:'7:10–16:30'},
+  {s:'2027-04-13',e:'2027-04-15',en:"Passover — Yal'a activities",he:'פסח - יל"א',type:'camp',hours:'7:10–16:30'},
+  {s:'2027-04-16',e:'2027-04-16',en:'Passover',he:'פסח',type:'closed'},
+  {s:'2027-04-18',e:'2027-04-19',en:"Passover — Yal'a activities",he:'פסח - יל"א',type:'camp',hours:'7:10–16:30'},
+  {s:'2027-04-20',e:'2027-04-28',en:'Passover',he:'חופשת פסח',type:'closed'},
+  {s:'2027-05-11',e:'2027-05-11',en:"Memorial Day — gan till 12:00, no Yal'a",he:'יום הזיכרון',type:'noact'},
+  {s:'2027-05-12',e:'2027-05-12',en:'Independence Day',he:'יום העצמאות',type:'closed'},
+  {s:'2027-06-10',e:'2027-06-11',en:'Shavuot',he:'חג השבועות',type:'closed'},
+  {s:'2027-07-01',e:'2027-08-08',en:'Summer camp',he:'קייטנת קיץ',type:'camp'}
+];
+
+const CLASS_CONTACTS = [
+  {family:'אבוטבול', kid:'נתנאל', pA:'פאינה', phA:'052-7867326', pB:'ישראל', phB:'050-5612746'},
+  {family:'אברהמוב', kid:'אדל נליה', pA:'סשה אמלי', phA:'050-7624336', pB:'יהונתן', phB:'050-4441987'},
+  {family:'בן הרוש', kid:'נאיה סול', pA:'דניאל', phA:'050-9114471', pB:'דוד', phB:'050-5822452'},
+  {family:'ברמן', kid:'גיא', pA:'לירן', phA:'052-8843002', pB:'אלכס', phB:'054-7879092'},
+  {family:'גובר', kid:'הילה', pA:'אפרת', phA:'050-3609590', pB:'שחר', phB:'050-4700074'},
+  {family:'געש', kid:'כרמל אדל', pA:'תמרה יעל', phA:'050-8583344', pB:'גיא', phB:'052-4757269'},
+  {family:'הכהן', kid:'אילי אריאל', pA:'הדר', phA:'052-3576660', pB:'צח יצחק', phB:'054-2055332'},
+  {family:'הראל', kid:'נועם מרדכי', pA:'עמית', phA:'052-5887671', pB:'גלעד', phB:'052-5453775'},
+  {family:'וולפסון', kid:'עומר', pA:'אברש', phA:'054-7652707', pB:'אילן', phB:'052-8870095'},
+  {family:'וולק', kid:'ארבל', pA:'חגית צפורה', phA:'054-5665770', pB:'רז', phB:'054-2199238'},
+  {family:'הן', kid:'ליה', pA:'דינה', phA:'058-6281120', pB:'יובל', phB:'054-6943094'},
+  {family:'טל', kid:'ברי יונתן', pA:'ליאת', phA:'050-6223190', pB:'רפי', phB:'050-2274427'},
+  {family:'כהן', kid:'אוליביה שיה', pA:'אשלי', phA:'054-2332099', pB:'מתיו', phB:'052-7345897'},
+  {family:'לב ארי', kid:'שי', pA:'גליה', phA:'054-2242464', pB:'עידן', phB:'054-2428379'},
+  {family:'לוברמן', kid:'יואב', pA:'מור', phA:'050-2515131', pB:'עידו', phB:'052-3836396'},
+  {family:'מבו', kid:'ארי', pA:'דוד', phA:'058-6782009', pB:'מלאני', phB:'058-5782009'},
+  {family:'מנשה', kid:'בנגי אשר', pA:'סקיה ירדנ', phA:'052-4838736', pB:'גבריאל', phB:'052-6662671'},
+  {family:'מנשה', kid:'אוריה משה', pA:'הגר', phA:'052-4260420', pB:'צח', phB:'052-4260420'},
+  {family:'מסיקה', kid:'מיתר יהב', pA:'אלירן', phA:'052-5800050', pB:'דינה', phB:'053-3372828'},
+  {family:'משולם', kid:'בר ישראל', pA:'רחל', phA:'053-7004745', pB:'גילאור', phB:'053-7004749'},
+  {family:'נחום', kid:'עדן מאיר', pA:'רבקה', phA:'058-7306100', pB:'ויטוריו', phB:'054-3576856'},
+  {family:'נעמת', kid:'יואב אברהם', pA:'אורי', phA:'050-6364844', pB:'', phB:''},
+  {family:'סחייק', kid:'אל', pA:'אנדראה', phA:'053-7005738', pB:'ליאור', phB:'052-4630099'},
+  {family:'פריד', kid:'מאי', pA:'טליה', phA:'052-6365809', pB:'אוהד', phB:'052-8119244'},
+  {family:'קוליש קסטלבוים', kid:'לילך', pA:'דניאל', phA:'054-8314417', pB:'ברונו', phB:'054-5432556'},
+  {family:'קיז', kid:'אדם', pA:'מעיין', phA:'052-8515154', pB:'דוד', phB:'054-9390123'},
+  {family:'שגב', kid:'אן רות', pA:'איילת', phA:'052-3505315', pB:'איתמר', phB:'054-5720353'},
+  {family:'שגיא', kid:'רפאל', pA:'ניקול', phA:'052-3829973', pB:'מתן', phB:'052-6332595'},
+  {family:'שוכלטר', kid:'טלי', pA:'דניאל', phA:'052-4660008', pB:'דורי', phB:'054-7647618'},
+  {family:'תורקיה', kid:'זוהר רחל', pA:'אשרי', phA:'054-4451451', pB:'יניב', phB:'053-2202204'}
+];
+
+let state = {
+  currentKid:'olivia',
+  currentView:'weekly',
+  caregivers:{olivia:JSON.parse(JSON.stringify(DEFAULT_CAREGIVERS)), josh:JSON.parse(JSON.stringify(DEFAULT_CAREGIVERS))},
+  hours:{olivia:{0:'',1:'',2:'',3:'',4:''}, josh:{0:'',1:'',2:'',3:'',4:''}},
+  notes:{olivia:{0:'',1:'',2:'',3:'',4:''}, josh:{0:'',1:'',2:'',3:'',4:''}},
+  activities:{olivia:{0:[],1:[],2:[],3:[],4:[]}}
+};
+
+let calMonth = new Date(2026,8,1);
+let pendingDayIndex = null;
+
+let saveRetryTimer = null;
+async function saveState(){
+  try{
+    await window.storage.set('family-tracker-state', JSON.stringify(state), false);
+  }catch(e){
+    if(saveRetryTimer) clearTimeout(saveRetryTimer);
+    saveRetryTimer = setTimeout(async ()=>{
+      try{ await window.storage.set('family-tracker-state', JSON.stringify(state), false); }
+      catch(e2){ }
+    }, 1500);
+  }
+}
+async function loadState(){
+  try{
+    const r = await window.storage.get('family-tracker-state', false);
+    if(r && r.value){
+      const loaded = JSON.parse(r.value);
+      state = Object.assign(state, loaded);
+    }
+  }catch(e){ }
+}
+
+function renderKidTabs(){
+  document.querySelectorAll('.kidtab').forEach(b=>{
+    b.classList.toggle('active', b.dataset.kid===state.currentKid);
+  });
+  document.getElementById('menuNavBtn').style.display = state.currentKid==='olivia' ? '' : 'none';
+  document.getElementById('contactsNavBtn').style.display = state.currentKid==='olivia' ? '' : 'none';
+  if(state.currentKid==='josh' && (state.currentView==='menu' || state.currentView==='contacts')){ setView('weekly'); }
+}
+
+function setView(v){
+  state.currentView = v;
+  document.querySelectorAll('.subnav button').forEach(b=>b.classList.toggle('active', b.dataset.view===v));
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById(v+'View').classList.add('active');
+  if(v==='calendar') renderCalendar();
+  if(v==='menu') renderMenuRef();
+  if(v==='contacts') renderContacts();
+}
+
+function renderWeekly(){
+  const kid = state.currentKid;
+  const banner = document.getElementById('trialBanner');
+  if(kid==='olivia'){
+    banner.innerHTML = "<b>Trial period:</b> through end of September, Olivia can try any activity freely. <b>From October 1</b>, a fixed weekly selection needs to be chosen.";
+    banner.style.display = '';
+  } else {
+    banner.innerHTML = "<b>Josh</b> doesn't have extracurricular activities yet — this view just tracks school hours and who's around each afternoon.";
+    banner.style.display = '';
+  }
+
+  const grid = document.getElementById('weekGrid');
+  grid.innerHTML = '';
+  DAY_NAMES.forEach((d,i)=>{
+    const card = document.createElement('div');
+    card.className='daycard';
+
+    const h = document.createElement('div');
+    h.innerHTML = `<h3>${d.en}</h3><div class="heb">${d.he}</div>`;
+    card.appendChild(h);
+
+    const cgWrap = document.createElement('div');
+    cgWrap.className='caregivers';
+    Object.keys(CAREGIVERS).forEach(key=>{
+      const chip = document.createElement('div');
+      const on = state.caregivers[kid][i].includes(key);
+      chip.className = 'cgchip ' + (on ? 'on '+key : 'off');
+      chip.textContent = CAREGIVERS[key].label;
+      chip.onclick = ()=>{
+        const arr = state.caregivers[kid][i];
+        const idx = arr.indexOf(key);
+        if(idx>-1) arr.splice(idx,1); else arr.push(key);
+        saveState();
+        renderWeekly();
+      };
+      cgWrap.appendChild(chip);
+    });
+    card.appendChild(cgWrap);
+
+    const hourWrap = document.createElement('div');
+    hourWrap.innerHTML = `<div class="field-label">School / gan hours</div>`;
+    const hourInput = document.createElement('input');
+    hourInput.className='hourbox';
+    hourInput.placeholder='e.g. 8:00–13:30';
+    hourInput.value = state.hours[kid][i] || '';
+    hourInput.oninput = ()=>{ state.hours[kid][i]=hourInput.value; saveState(); };
+    hourWrap.appendChild(hourInput);
+    card.appendChild(hourWrap);
+
+    const actWrap = document.createElement('div');
+    actWrap.className='activities';
+    if(kid==='olivia'){
+      actWrap.innerHTML = `<div class="field-label">Activities</div>`;
+      (state.activities.olivia[i]||[]).forEach((act,ai)=>{
+        const chip = document.createElement('div');
+        chip.className='actchip';
+        chip.innerHTML = `<span>${act.name} · ${act.time}</span><span class="rm">&times;</span>`;
+        chip.querySelector('.rm').onclick = ()=>{
+          state.activities.olivia[i].splice(ai,1);
+          saveState(); renderWeekly();
+        };
+        actWrap.appendChild(chip);
+      });
+      const addBtn = document.createElement('button');
+      addBtn.className='addbtn';
+      addBtn.textContent='+ Add activity';
+      addBtn.onclick = ()=>openActivityModal(i);
+      actWrap.appendChild(addBtn);
+    } else {
+      actWrap.innerHTML = `<div class="field-label">Notes</div>`;
+      const note = document.createElement('textarea');
+      note.className='notebox';
+      note.placeholder='Any notes for this day';
+      note.value = state.notes.josh[i] || '';
+      note.oninput = ()=>{ state.notes.josh[i]=note.value; saveState(); };
+      actWrap.appendChild(note);
+    }
+    card.appendChild(actWrap);
+
+    grid.appendChild(card);
+  });
+}
+
+function openActivityModal(dayIndex){
+  pendingDayIndex = dayIndex;
+  const menu = OLIVIA_MENU[dayIndex];
+  const body = document.getElementById('modalBody');
+  let html = `<h3>${DAY_NAMES[dayIndex].en} activities</h3><div class="sub">${DAY_NAMES[dayIndex].he} — tap a time slot to add it</div>`;
+  menu.forEach(item=>{
+    html += `<div class="menuitem"><div class="nm">${item.heart?'<span class="heart">&#9829;</span>':''}${item.name}</div>`;
+    item.slots.forEach(sl=>{
+      const label = sl.g ? `${sl.t} <span style="color:var(--ink-soft); font-weight:400;">(${sl.g})</span>` : sl.t;
+      html += `<div class="slotrow"><span>${label}</span><button class="slotpick" data-name="${item.name.replace(/"/g,'&quot;')}" data-time="${sl.t}">Add</button></div>`;
+    });
+    html += `</div>`;
+  });
+  html += `<button class="closemodal" id="closeModalBtn">Close</button>`;
+  body.innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('show');
+  document.getElementById('closeModalBtn').onclick = closeModal;
+  body.querySelectorAll('.slotpick').forEach(btn=>{
+    btn.onclick = ()=>{
+      state.activities.olivia[pendingDayIndex].push({name:btn.dataset.name, time:btn.dataset.time});
+      saveState();
+      renderWeekly();
+      closeModal();
+    };
+  });
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); }
+
+function renderMenuRef(){
+  const wrap = document.getElementById('menuRef');
+  wrap.innerHTML = '';
+  DAY_NAMES.forEach((d,i)=>{
+    const col = document.createElement('div');
+    col.className='col';
+    let html = `<h3>${d.en} <span style="color:var(--ink-soft); font-weight:400;">${d.he}</span></h3>`;
+    OLIVIA_MENU[i].forEach(item=>{
+      html += `<div class="menuitem"><div class="nm">${item.heart?'<span class="heart">&#9829;</span>':''}${item.name}</div>`;
+      item.slots.forEach(sl=>{
+        const label = sl.g ? `${sl.t} <span style="color:var(--ink-soft); font-weight:400;">(${sl.g})</span>` : sl.t;
+        html += `<div class="slotrow"><span>${label}</span><button class="slotpick" data-day="${i}" data-name="${item.name.replace(/"/g,'&quot;')}" data-time="${sl.t}">Add</button></div>`;
+      });
+      html += `</div>`;
+    });
+    col.innerHTML = html;
+    wrap.appendChild(col);
+  });
+  wrap.querySelectorAll('.slotpick').forEach(btn=>{
+    btn.onclick = ()=>{
+      const di = parseInt(btn.dataset.day,10);
+      state.activities.olivia[di].push({name:btn.dataset.name, time:btn.dataset.time});
+      saveState();
+      renderWeekly();
+      btn.textContent='Added';
+      btn.disabled = true;
+      setTimeout(()=>{btn.textContent='Add'; btn.disabled=false;},900);
+    };
+  });
+}
+
+function pad(n){ return n<10 ? '0'+n : ''+n; }
+function toISO(y,m,d){ return `${y}-${pad(m+1)}-${pad(d)}`; }
+function getHolidays(){ return state.currentKid==='olivia' ? OLIVIA_HOLIDAYS : JOSH_HOLIDAYS; }
+function findHoliday(iso){
+  return getHolidays().find(h=> iso>=h.s && iso<=h.e);
+}
+
+function renderCalendar(){
+  const y = calMonth.getFullYear(), m = calMonth.getMonth();
+  document.getElementById('monthLabel').textContent = calMonth.toLocaleDateString('en-US',{month:'long', year:'numeric'});
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML='';
+  ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(l=>{
+    const el = document.createElement('div'); el.className='calhead'; el.textContent=l; grid.appendChild(el);
+  });
+  const firstDow = new Date(y,m,1).getDay();
+  const daysInMonth = new Date(y,m+1,0).getDate();
+  for(let i=0;i<firstDow;i++){
+    const el = document.createElement('div'); el.className='calday blank'; grid.appendChild(el);
+  }
+  for(let d=1; d<=daysInMonth; d++){
+    const iso = toISO(y,m,d);
+    const hol = findHoliday(iso);
+    const el = document.createElement('div');
+    el.className = 'calday' + (hol ? ' '+hol.type : '');
+    let tag = '';
+    if(hol){ tag = `<span class="tag">${hol.en}</span>`; }
+    el.innerHTML = `<span class="num">${d}</span>${tag}`;
+    if(hol){
+      el.style.cursor='pointer';
+      el.onclick = ()=>{
+        const hrs = hol.hours ? ` · ${hol.hours}` : '';
+        document.getElementById('calDetail').innerHTML = `<b>${hol.en}</b> — ${hol.he}${hrs}<br>${iso===hol.s && iso===hol.e ? iso : (hol.s+' to '+hol.e)}`;
+      };
+    }
+    grid.appendChild(el);
+  }
+}
+
+function renderContacts(){
+  const q = (document.getElementById('contactSearch').value || '').trim();
+  const list = document.getElementById('contactList');
+  list.innerHTML = '';
+  const filtered = CLASS_CONTACTS.filter(c=>{
+    if(!q) return true;
+    return c.kid.includes(q) || c.family.includes(q);
+  });
+  if(filtered.length===0){
+    list.innerHTML = '<p class="hint">No matches.</p>';
+    return;
+  }
+  filtered.forEach(c=>{
+    const card = document.createElement('div');
+    card.className='contactcard';
+    let parents = '';
+    if(c.pA) parents += `<span class="parent">${c.pA}: <a href="tel:${c.phA.replace(/-/g,'')}">${c.phA}</a></span>`;
+    if(c.pB) parents += `<span class="parent">${c.pB}: <a href="tel:${c.phB.replace(/-/g,'')}">${c.phB}</a></span>`;
+    card.innerHTML = `<div><div class="kidname">${c.kid}</div><div class="family">${c.family}</div></div><div class="parents">${parents}</div>`;
+    list.appendChild(card);
+  });
+}
+document.getElementById('contactSearch').addEventListener('input', renderContacts);
+
+document.querySelectorAll('.kidtab').forEach(b=>{
+  b.onclick = ()=>{
+    state.currentKid = b.dataset.kid;
+    saveState();
+    renderKidTabs();
+    renderWeekly();
+    if(state.currentView==='calendar') renderCalendar();
+    if(state.currentView==='menu') renderMenuRef();
+  };
+});
+document.querySelectorAll('.subnav button').forEach(b=>{
+  b.onclick = ()=> setView(b.dataset.view);
+});
+document.getElementById('prevMonth').onclick = ()=>{ calMonth.setMonth(calMonth.getMonth()-1); renderCalendar(); };
+document.getElementById('nextMonth').onclick = ()=>{ calMonth.setMonth(calMonth.getMonth()+1); renderCalendar(); };
+document.getElementById('modalOverlay').onclick = (e)=>{ if(e.target.id==='modalOverlay') closeModal(); };
+
+(async function init(){
+  await loadState();
+  renderKidTabs();
+  renderWeekly();
+})();
+</script>
+</body>
+</html>
