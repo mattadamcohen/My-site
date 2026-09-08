@@ -175,6 +175,57 @@ textarea.notebox{ resize:vertical; min-height:38px; }
 .contactcard .parent{ font-size:13px; }
 .contactcard .parent a{ color:var(--dad-deep); text-decoration:none; font-weight:700; }
 .contactcard .parent a:hover{ text-decoration:underline; }
+
+.todaybanner{
+  background:var(--paper); border:1px solid var(--line); border-radius:10px;
+  padding:10px 16px; font-size:13.5px; margin-bottom:16px; display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+}
+.todaybanner .todaydate{ font-family:'Fraunces'; font-weight:600; font-size:14px; }
+.todaybanner b{ color:var(--ink); }
+
+.weeknav{ display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+.weeknav button{
+  border:1px solid var(--line); background:var(--paper); border-radius:8px; padding:6px 12px;
+  cursor:pointer; font-family:'Karla'; font-weight:700;
+}
+.weeknav .label{ font-family:'Fraunces'; font-size:17px; font-weight:600; }
+.weeknav .spacer{ flex:1; }
+
+.daytag{
+  font-size:11.5px; font-weight:700; padding:5px 9px; border-radius:8px; margin:-2px 0 2px;
+}
+.daytag.closed{ background:var(--closed-tint); color:var(--closed); }
+.daytag.camp{ background:var(--camp-tint); color:var(--camp); }
+.daytag.noact{ background:var(--noact-tint); color:#8A6A00; }
+.daytag.open{ background:var(--open-tint); color:#2C5C2E; }
+
+.ovrow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.ovlink{
+  font-size:11.5px; color:var(--ink-soft); text-decoration:underline; cursor:pointer;
+  background:none; border:none; padding:0; font-family:'Karla'; font-weight:700;
+}
+.ovbadge{
+  font-size:11px; font-weight:700; color:var(--granny-deep); background:var(--granny-tint);
+  padding:2px 8px; border-radius:999px;
+}
+
+.upcomingrow{
+  background:var(--paper); border:1px solid var(--line); border-radius:12px;
+  padding:12px 14px; margin-bottom:10px;
+}
+.uprow-head{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px; }
+.uprow-head .update{ font-family:'Fraunces'; font-weight:600; font-size:15px; }
+.upinfo{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:13px; color:var(--ink-soft); }
+
+.tag.acttag{ color:var(--ink-soft); }
+
+@media print{
+  .top, .todaybanner, .subnav, .weeknav, #printBtn{ display:none !important; }
+  body{ padding:0; background:#fff; }
+  .view{ display:none !important; }
+  #upcomingView{ display:block !important; }
+  .upcomingrow{ break-inside:avoid; border-color:#999; }
+}
 </style>
 </head>
 <body>
@@ -191,8 +242,11 @@ textarea.notebox{ resize:vertical; min-height:38px; }
     </div>
   </div>
 
+  <div class="todaybanner" id="todayBanner"></div>
+
   <div class="subnav">
     <button class="active" data-view="weekly">Weekly rhythm</button>
+    <button data-view="upcoming">Upcoming</button>
     <button data-view="calendar">Holiday calendar</button>
     <button data-view="menu" id="menuNavBtn">Activity menu</button>
     <button data-view="contacts" id="contactsNavBtn">Class contacts</button>
@@ -200,8 +254,23 @@ textarea.notebox{ resize:vertical; min-height:38px; }
 
   <div id="weeklyView" class="view active">
     <div class="banner" id="trialBanner"></div>
+    <div class="weeknav">
+      <button id="prevWeek">&larr;</button>
+      <div class="label" id="weekLabel"></div>
+      <button id="nextWeek">&rarr;</button>
+      <div class="spacer"></div>
+      <button id="thisWeekBtn">This week</button>
+    </div>
     <div class="weekgrid" id="weekGrid"></div>
-    <p class="hint">Fri & Sat aren't tracked here (weekend). Tap a caregiver chip to toggle who's around that day.</p>
+    <p class="hint">Fri & Sat aren't tracked here (weekend). Tap a caregiver chip to toggle who's around that day. Holidays/camp days are flagged automatically; use "Make this day different" for a one-off swap that won't change your usual weekly plan.</p>
+  </div>
+
+  <div id="upcomingView" class="view">
+    <div class="ovrow" style="margin-bottom:14px; justify-content:space-between;">
+      <p class="hint" style="margin:0;">The next 7 days at a glance — handy for a caregiver who needs the whole picture.</p>
+      <button class="addbtn" id="printBtn">Print schedule</button>
+    </div>
+    <div id="upcomingList"></div>
   </div>
 
   <div id="calendarView" class="view">
@@ -368,14 +437,90 @@ let state = {
   caregivers:{olivia:JSON.parse(JSON.stringify(DEFAULT_CAREGIVERS)), josh:JSON.parse(JSON.stringify(DEFAULT_CAREGIVERS))},
   hours:{olivia:{0:'',1:'',2:'',3:'',4:''}, josh:{0:'',1:'',2:'',3:'',4:''}},
   notes:{olivia:{0:'',1:'',2:'',3:'',4:''}, josh:{0:'',1:'',2:'',3:'',4:''}},
-  activities:{olivia:{0:[],1:[],2:[],3:[],4:[]}}
+  activities:{olivia:{0:[],1:[],2:[],3:[],4:[]}},
+  overrides:{olivia:{}, josh:{}}
 };
 
 let calMonth = new Date(2026,8,1);
+let currentWeekStart = startOfWeek(new Date());
 let pendingDayIndex = null;
+let pendingIso = null;
+let pendingIsOverride = false;
+
+function startOfWeek(d){
+  const nd = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  nd.setDate(nd.getDate() - nd.getDay());
+  return nd;
+}
+function addDays(d, n){
+  const nd = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  nd.setDate(nd.getDate() + n);
+  return nd;
+}
+function getHolidaysFor(kid){ return kid==='olivia' ? OLIVIA_HOLIDAYS : JOSH_HOLIDAYS; }
+function findHolidayFor(kid, iso){ return getHolidaysFor(kid).find(h=> iso>=h.s && iso<=h.e); }
+
+function getEffectiveDay(kid, dateObj){
+  const dow = dateObj.getDay();
+  const iso = toISO(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+  const isWeekend = dow===5 || dow===6;
+  const holiday = findHolidayFor(kid, iso);
+  const ov = (state.overrides[kid] && state.overrides[kid][iso]) || null;
+  const defCaregivers = !isWeekend ? (state.caregivers[kid][dow]||[]) : [];
+  const defHours = !isWeekend ? (state.hours[kid][dow]||'') : '';
+  const defNotes = !isWeekend ? (state.notes[kid][dow]||'') : '';
+  const defActivities = (kid==='olivia' && !isWeekend) ? (state.activities.olivia[dow]||[]) : [];
+  return {
+    iso, dow, isWeekend, holiday,
+    isOverridden: !!ov,
+    caregivers: ov ? ov.caregivers : defCaregivers,
+    hours: ov && ov.hours!==undefined ? ov.hours : defHours,
+    notes: ov && ov.notes!==undefined ? ov.notes : defNotes,
+    activities: ov ? ov.activities : defActivities
+  };
+}
+function ensureOverride(kid, iso){
+  if(!state.overrides[kid][iso]){
+    const dateObj = new Date(iso+'T00:00:00');
+    const cur = getEffectiveDay(kid, dateObj);
+    state.overrides[kid][iso] = {
+      caregivers:[...cur.caregivers],
+      hours:cur.hours,
+      notes:cur.notes,
+      activities:[...cur.activities]
+    };
+  }
+  return state.overrides[kid][iso];
+}
+function clearOverride(kid, iso){
+  delete state.overrides[kid][iso];
+}
+function holidayShort(type){
+  return type==='closed' ? 'closed' : type==='camp' ? 'camp' : type==='noact' ? 'no activities' : 'open';
+}
+
+function renderTodayBanner(){
+  const el = document.getElementById('todayBanner');
+  const today = new Date();
+  const dateLabel = today.toLocaleDateString('en-US',{weekday:'long', month:'short', day:'numeric'});
+  const parts = ['olivia','josh'].map(kid=>{
+    const label = kid==='olivia' ? 'Olivia' : 'Josh';
+    const d = getEffectiveDay(kid, today);
+    if(d.isWeekend) return `<b>${label}:</b> weekend, no school`;
+    if(d.holiday){
+      const hrs = d.holiday.hours ? ` (${d.holiday.hours})` : '';
+      return `<b>${label}:</b> ${d.holiday.en}${hrs} — ${holidayShort(d.holiday.type)}`;
+    }
+    const cg = d.caregivers.length ? d.caregivers.map(c=>CAREGIVERS[c].label).join(' & ') : 'no caregiver set';
+    const hrs = d.hours ? ` · ${d.hours}` : '';
+    return `<b>${label}:</b> ${cg}${hrs}`;
+  });
+  el.innerHTML = `<span class="todaydate">${dateLabel}</span> — ${parts.join(' &nbsp;|&nbsp; ')}`;
+}
 
 let saveRetryTimer = null;
 async function saveState(){
+  renderTodayBanner();
   try{
     await window.storage.set('family-tracker-state', JSON.stringify(state), false);
   }catch(e){
@@ -413,6 +558,18 @@ function setView(v){
   if(v==='calendar') renderCalendar();
   if(v==='menu') renderMenuRef();
   if(v==='contacts') renderContacts();
+  if(v==='upcoming') renderUpcoming();
+}
+
+function renderWeekNav(){
+  const start = currentWeekStart;
+  const end = addDays(start,4);
+  const startMonth = start.toLocaleDateString('en-US',{month:'short'});
+  const endMonth = end.toLocaleDateString('en-US',{month:'short'});
+  const label = (start.getMonth()===end.getMonth())
+    ? `${startMonth} ${start.getDate()}–${end.getDate()}, ${end.getFullYear()}`
+    : `${startMonth} ${start.getDate()} – ${endMonth} ${end.getDate()}, ${end.getFullYear()}`;
+  document.getElementById('weekLabel').textContent = label;
 }
 
 function renderWeekly(){
@@ -426,27 +583,60 @@ function renderWeekly(){
     banner.style.display = '';
   }
 
+  renderWeekNav();
+
   const grid = document.getElementById('weekGrid');
   grid.innerHTML = '';
   DAY_NAMES.forEach((d,i)=>{
+    const dateObj = addDays(currentWeekStart, i);
+    const iso = toISO(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+    const day = getEffectiveDay(kid, dateObj);
+    const noSchool = day.holiday && day.holiday.type==='closed';
+    const noRegularActivities = day.holiday && (day.holiday.type==='closed' || day.holiday.type==='camp' || day.holiday.type==='noact');
+
     const card = document.createElement('div');
     card.className='daycard';
 
     const h = document.createElement('div');
-    h.innerHTML = `<h3>${d.en}</h3><div class="heb">${d.he}</div>`;
+    const dateStr = dateObj.toLocaleDateString('en-US',{month:'short', day:'numeric'});
+    h.innerHTML = `<h3>${d.en} <span style="color:var(--ink-soft); font-weight:400; font-size:13px;">${dateStr}</span></h3><div class="heb">${d.he}</div>`;
     card.appendChild(h);
+
+    if(day.holiday){
+      const tag = document.createElement('div');
+      tag.className = 'daytag ' + day.holiday.type;
+      tag.textContent = day.holiday.en + (day.holiday.hours ? ' · '+day.holiday.hours : '');
+      card.appendChild(tag);
+    }
+
+    const ovRow = document.createElement('div');
+    ovRow.className = 'ovrow';
+    if(day.isOverridden){
+      ovRow.innerHTML = `<span class="ovbadge">One-off for this date</span>`;
+      const revertBtn = document.createElement('button');
+      revertBtn.className='ovlink';
+      revertBtn.textContent='Revert to usual';
+      revertBtn.onclick = ()=>{ clearOverride(kid, iso); saveState(); renderWeekly(); };
+      ovRow.appendChild(revertBtn);
+    } else {
+      const makeBtn = document.createElement('button');
+      makeBtn.className='ovlink';
+      makeBtn.textContent='Make this day different';
+      makeBtn.onclick = ()=>{ ensureOverride(kid, iso); saveState(); renderWeekly(); };
+      ovRow.appendChild(makeBtn);
+    }
+    card.appendChild(ovRow);
 
     const cgWrap = document.createElement('div');
     cgWrap.className='caregivers';
     Object.keys(CAREGIVERS).forEach(key=>{
       const chip = document.createElement('div');
-      const on = state.caregivers[kid][i].includes(key);
+      const on = day.caregivers.includes(key);
       chip.className = 'cgchip ' + (on ? 'on '+key : 'off');
       chip.textContent = CAREGIVERS[key].label;
       chip.onclick = ()=>{
-        const arr = state.caregivers[kid][i];
-        const idx = arr.indexOf(key);
-        if(idx>-1) arr.splice(idx,1); else arr.push(key);
+        const idx = day.caregivers.indexOf(key);
+        if(idx>-1) day.caregivers.splice(idx,1); else day.caregivers.push(key);
         saveState();
         renderWeekly();
       };
@@ -455,41 +645,59 @@ function renderWeekly(){
     card.appendChild(cgWrap);
 
     const hourWrap = document.createElement('div');
-    hourWrap.innerHTML = `<div class="field-label">School / gan hours</div>`;
-    const hourInput = document.createElement('input');
-    hourInput.className='hourbox';
-    hourInput.placeholder='e.g. 8:00–13:30';
-    hourInput.value = state.hours[kid][i] || '';
-    hourInput.oninput = ()=>{ state.hours[kid][i]=hourInput.value; saveState(); };
-    hourWrap.appendChild(hourInput);
+    if(noSchool){
+      hourWrap.innerHTML = `<div class="field-label">School / gan hours</div><div class="hint" style="margin:0;">Closed today</div>`;
+    } else {
+      hourWrap.innerHTML = `<div class="field-label">School / gan hours</div>`;
+      const hourInput = document.createElement('input');
+      hourInput.className='hourbox';
+      hourInput.placeholder='e.g. 8:00–13:30';
+      hourInput.value = day.hours || '';
+      hourInput.oninput = ()=>{
+        if(day.isOverridden){ ensureOverride(kid, iso).hours = hourInput.value; }
+        else { state.hours[kid][day.dow] = hourInput.value; }
+        saveState();
+      };
+      hourWrap.appendChild(hourInput);
+    }
     card.appendChild(hourWrap);
 
     const actWrap = document.createElement('div');
     actWrap.className='activities';
     if(kid==='olivia'){
-      actWrap.innerHTML = `<div class="field-label">Activities</div>`;
-      (state.activities.olivia[i]||[]).forEach((act,ai)=>{
-        const chip = document.createElement('div');
-        chip.className='actchip';
-        chip.innerHTML = `<span>${act.name} · ${act.time}</span><span class="rm">&times;</span>`;
-        chip.querySelector('.rm').onclick = ()=>{
-          state.activities.olivia[i].splice(ai,1);
-          saveState(); renderWeekly();
-        };
-        actWrap.appendChild(chip);
-      });
-      const addBtn = document.createElement('button');
-      addBtn.className='addbtn';
-      addBtn.textContent='+ Add activity';
-      addBtn.onclick = ()=>openActivityModal(i);
-      actWrap.appendChild(addBtn);
+      if(noRegularActivities){
+        const msg = day.holiday.type==='closed' ? 'No activities — school closed' :
+          day.holiday.type==='camp' ? 'Camp day — regular activities paused' : 'No after-school activities today';
+        actWrap.innerHTML = `<div class="field-label">Activities</div><div class="hint" style="margin:0;">${msg}</div>`;
+      } else {
+        actWrap.innerHTML = `<div class="field-label">Activities</div>`;
+        day.activities.forEach((act,ai)=>{
+          const chip = document.createElement('div');
+          chip.className='actchip';
+          chip.innerHTML = `<span>${act.name} · ${act.time}</span><span class="rm">&times;</span>`;
+          chip.querySelector('.rm').onclick = ()=>{
+            day.activities.splice(ai,1);
+            saveState(); renderWeekly();
+          };
+          actWrap.appendChild(chip);
+        });
+        const addBtn = document.createElement('button');
+        addBtn.className='addbtn';
+        addBtn.textContent='+ Add activity';
+        addBtn.onclick = ()=>openActivityModal(day.dow, iso, day.isOverridden);
+        actWrap.appendChild(addBtn);
+      }
     } else {
       actWrap.innerHTML = `<div class="field-label">Notes</div>`;
       const note = document.createElement('textarea');
       note.className='notebox';
       note.placeholder='Any notes for this day';
-      note.value = state.notes.josh[i] || '';
-      note.oninput = ()=>{ state.notes.josh[i]=note.value; saveState(); };
+      note.value = day.notes || '';
+      note.oninput = ()=>{
+        if(day.isOverridden){ ensureOverride(kid, iso).notes = note.value; }
+        else { state.notes[kid][day.dow] = note.value; }
+        saveState();
+      };
       actWrap.appendChild(note);
     }
     card.appendChild(actWrap);
@@ -498,11 +706,13 @@ function renderWeekly(){
   });
 }
 
-function openActivityModal(dayIndex){
-  pendingDayIndex = dayIndex;
-  const menu = OLIVIA_MENU[dayIndex];
+function openActivityModal(dow, iso, isOverride){
+  pendingDayIndex = dow;
+  pendingIso = iso;
+  pendingIsOverride = isOverride;
+  const menu = OLIVIA_MENU[dow];
   const body = document.getElementById('modalBody');
-  let html = `<h3>${DAY_NAMES[dayIndex].en} activities</h3><div class="sub">${DAY_NAMES[dayIndex].he} — tap a time slot to add it</div>`;
+  let html = `<h3>${DAY_NAMES[dow].en} activities</h3><div class="sub">${DAY_NAMES[dow].he} — tap a time slot to add it</div>`;
   menu.forEach(item=>{
     html += `<div class="menuitem"><div class="nm">${item.heart?'<span class="heart">&#9829;</span>':''}${item.name}</div>`;
     item.slots.forEach(sl=>{
@@ -517,7 +727,12 @@ function openActivityModal(dayIndex){
   document.getElementById('closeModalBtn').onclick = closeModal;
   body.querySelectorAll('.slotpick').forEach(btn=>{
     btn.onclick = ()=>{
-      state.activities.olivia[pendingDayIndex].push({name:btn.dataset.name, time:btn.dataset.time});
+      const entry = {name:btn.dataset.name, time:btn.dataset.time};
+      if(pendingIsOverride){
+        ensureOverride('olivia', pendingIso).activities.push(entry);
+      } else {
+        state.activities.olivia[pendingDayIndex].push(entry);
+      }
       saveState();
       renderWeekly();
       closeModal();
@@ -525,6 +740,43 @@ function openActivityModal(dayIndex){
   });
 }
 function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); }
+
+function renderUpcoming(){
+  const kid = state.currentKid;
+  const list = document.getElementById('upcomingList');
+  list.innerHTML = '';
+  for(let i=0;i<7;i++){
+    const dateObj = addDays(new Date(), i);
+    const day = getEffectiveDay(kid, dateObj);
+    const row = document.createElement('div');
+    row.className = 'upcomingrow';
+    const dateLabel = dateObj.toLocaleDateString('en-US',{weekday:'long', month:'short', day:'numeric'});
+    let html = `<div class="uprow-head"><span class="update">${i===0?'Today · ':''}${dateLabel}</span>`;
+    if(day.holiday){
+      html += `<span class="daytag ${day.holiday.type}">${day.holiday.en}${day.holiday.hours ? ' · '+day.holiday.hours : ''}</span>`;
+    }
+    html += `</div>`;
+    if(day.isWeekend){
+      html += `<div class="hint" style="margin:0;">Weekend</div>`;
+    } else {
+      html += `<div class="upinfo">`;
+      if(day.caregivers.length){
+        html += day.caregivers.map(c=>`<span class="cgchip on ${c}">${CAREGIVERS[c].label}</span>`).join(' ');
+      } else {
+        html += `No caregiver set`;
+      }
+      if(day.hours) html += ` · ${day.hours}`;
+      html += `</div>`;
+      if(kid==='olivia' && day.activities.length){
+        html += `<div class="activities" style="margin-top:8px;">` + day.activities.map(a=>`<span class="actchip" style="cursor:default;">${a.name} · ${a.time}</span>`).join('') + `</div>`;
+      } else if(kid==='josh' && day.notes){
+        html += `<div class="hint" style="margin-top:8px;">${day.notes}</div>`;
+      }
+    }
+    row.innerHTML = html;
+    list.appendChild(row);
+  }
+}
 
 function renderMenuRef(){
   const wrap = document.getElementById('menuRef');
@@ -559,13 +811,29 @@ function renderMenuRef(){
 
 function pad(n){ return n<10 ? '0'+n : ''+n; }
 function toISO(y,m,d){ return `${y}-${pad(m+1)}-${pad(d)}`; }
-function getHolidays(){ return state.currentKid==='olivia' ? OLIVIA_HOLIDAYS : JOSH_HOLIDAYS; }
-function findHoliday(iso){
-  return getHolidays().find(h=> iso>=h.s && iso<=h.e);
+
+function showDayDetail(kid, iso, day){
+  const label = new Date(iso+'T00:00:00').toLocaleDateString('en-US',{weekday:'long', month:'long', day:'numeric'});
+  let html = `<b>${label}</b>`;
+  if(day.holiday){
+    const hrs = day.holiday.hours ? ` · ${day.holiday.hours}` : '';
+    html += `<br>${day.holiday.en} — ${day.holiday.he}${hrs}`;
+  }
+  if(!day.holiday || day.holiday.type!=='closed'){
+    const cg = day.caregivers.length ? day.caregivers.map(c=>CAREGIVERS[c].label).join(' & ') : 'No caregiver set';
+    html += `<br>${cg}${day.hours ? ' · '+day.hours : ''}`;
+    if(kid==='olivia' && day.activities.length){
+      html += `<br>${day.activities.map(a=>`${a.name} (${a.time})`).join(', ')}`;
+    } else if(kid==='josh' && day.notes){
+      html += `<br>${day.notes}`;
+    }
+  }
+  document.getElementById('calDetail').innerHTML = html;
 }
 
 function renderCalendar(){
   const y = calMonth.getFullYear(), m = calMonth.getMonth();
+  const kid = state.currentKid;
   document.getElementById('monthLabel').textContent = calMonth.toLocaleDateString('en-US',{month:'long', year:'numeric'});
   const grid = document.getElementById('calGrid');
   grid.innerHTML='';
@@ -579,18 +847,20 @@ function renderCalendar(){
   }
   for(let d=1; d<=daysInMonth; d++){
     const iso = toISO(y,m,d);
-    const hol = findHoliday(iso);
+    const dateObj = new Date(y,m,d);
+    const day = getEffectiveDay(kid, dateObj);
     const el = document.createElement('div');
-    el.className = 'calday' + (hol ? ' '+hol.type : '');
+    el.className = 'calday' + (day.holiday ? ' '+day.holiday.type : '');
     let tag = '';
-    if(hol){ tag = `<span class="tag">${hol.en}</span>`; }
+    if(day.holiday){
+      tag = `<span class="tag">${day.holiday.en}</span>`;
+    } else if(kid==='olivia' && !day.isWeekend && day.activities.length){
+      tag = `<span class="tag acttag">${day.activities.length} activit${day.activities.length===1?'y':'ies'}</span>`;
+    }
     el.innerHTML = `<span class="num">${d}</span>${tag}`;
-    if(hol){
+    if(!day.isWeekend){
       el.style.cursor='pointer';
-      el.onclick = ()=>{
-        const hrs = hol.hours ? ` · ${hol.hours}` : '';
-        document.getElementById('calDetail').innerHTML = `<b>${hol.en}</b> — ${hol.he}${hrs}<br>${iso===hol.s && iso===hol.e ? iso : (hol.s+' to '+hol.e)}`;
-      };
+      el.onclick = ()=> showDayDetail(kid, iso, day);
     }
     grid.appendChild(el);
   }
@@ -628,6 +898,7 @@ document.querySelectorAll('.kidtab').forEach(b=>{
     renderWeekly();
     if(state.currentView==='calendar') renderCalendar();
     if(state.currentView==='menu') renderMenuRef();
+    if(state.currentView==='upcoming') renderUpcoming();
   };
 });
 document.querySelectorAll('.subnav button').forEach(b=>{
@@ -635,12 +906,17 @@ document.querySelectorAll('.subnav button').forEach(b=>{
 });
 document.getElementById('prevMonth').onclick = ()=>{ calMonth.setMonth(calMonth.getMonth()-1); renderCalendar(); };
 document.getElementById('nextMonth').onclick = ()=>{ calMonth.setMonth(calMonth.getMonth()+1); renderCalendar(); };
+document.getElementById('prevWeek').onclick = ()=>{ currentWeekStart = addDays(currentWeekStart,-7); renderWeekly(); };
+document.getElementById('nextWeek').onclick = ()=>{ currentWeekStart = addDays(currentWeekStart,7); renderWeekly(); };
+document.getElementById('thisWeekBtn').onclick = ()=>{ currentWeekStart = startOfWeek(new Date()); renderWeekly(); };
+document.getElementById('printBtn').onclick = ()=>{ renderUpcoming(); window.print(); };
 document.getElementById('modalOverlay').onclick = (e)=>{ if(e.target.id==='modalOverlay') closeModal(); };
 
 (async function init(){
   await loadState();
   renderKidTabs();
   renderWeekly();
+  renderTodayBanner();
 })();
 </script>
 </body>
