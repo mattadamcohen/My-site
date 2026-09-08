@@ -219,6 +219,12 @@ textarea.notebox{ resize:vertical; min-height:38px; }
 
 .tag.acttag{ color:var(--ink-soft); }
 
+.lockbox{
+  max-width:360px; background:var(--paper); border:1px solid var(--line); border-radius:14px;
+  padding:20px 22px; margin:10px 0;
+}
+.lockbox h3{ font-size:17px; }
+
 @media print{
   .top, .todaybanner, .subnav, .weeknav, #printBtn{ display:none !important; }
   body{ padding:0; background:#fff; }
@@ -295,9 +301,20 @@ textarea.notebox{ resize:vertical; min-height:38px; }
   </div>
 
   <div id="contactsView" class="view">
-    <p class="hint" style="margin-top:0;">Olivia's class contacts — for arranging playdates. Only names and phone numbers are kept here; double-check a number before relying on it.</p>
-    <input class="hourbox" id="contactSearch" placeholder="Search by child or family name" style="max-width:320px; margin-bottom:16px;">
-    <div id="contactList"></div>
+    <div id="contactsLock" class="lockbox">
+      <h3>Contacts are locked</h3>
+      <p class="hint" style="margin:4px 0 14px;">Enter the password to view class contacts.</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <input class="hourbox" id="contactsPassword" type="password" placeholder="Password" style="max-width:180px;">
+        <button class="addbtn" id="contactsUnlockBtn">Unlock</button>
+      </div>
+      <p class="hint" id="contactsLockError" style="color:var(--closed); display:none; margin-top:10px;">Incorrect password.</p>
+    </div>
+    <div id="contactsContent" style="display:none;">
+      <p class="hint" style="margin-top:0;">Olivia's class contacts — for arranging playdates. Only names and phone numbers are kept here; double-check a number before relying on it.</p>
+      <input class="hourbox" id="contactSearch" placeholder="Search by child or family name" style="max-width:320px; margin-bottom:16px;">
+      <div id="contactList"></div>
+    </div>
   </div>
 
 </div>
@@ -557,7 +574,7 @@ function setView(v){
   document.getElementById(v+'View').classList.add('active');
   if(v==='calendar') renderCalendar();
   if(v==='menu') renderMenuRef();
-  if(v==='contacts') renderContacts();
+  if(v==='contacts') renderContactsLockState();
   if(v==='upcoming') renderUpcoming();
 }
 
@@ -889,6 +906,30 @@ function renderContacts(){
   });
 }
 document.getElementById('contactSearch').addEventListener('input', renderContacts);
+
+const CONTACTS_PASSWORD = '8259';
+let contactsUnlocked = false;
+try{ contactsUnlocked = sessionStorage.getItem('contactsUnlocked')==='1'; }catch(e){}
+
+function renderContactsLockState(){
+  document.getElementById('contactsLock').style.display = contactsUnlocked ? 'none' : '';
+  document.getElementById('contactsContent').style.display = contactsUnlocked ? '' : 'none';
+  if(contactsUnlocked) renderContacts();
+}
+function tryContactsUnlock(){
+  const input = document.getElementById('contactsPassword');
+  if(input.value === CONTACTS_PASSWORD){
+    contactsUnlocked = true;
+    try{ sessionStorage.setItem('contactsUnlocked','1'); }catch(e){}
+    document.getElementById('contactsLockError').style.display = 'none';
+    input.value = '';
+    renderContactsLockState();
+  } else {
+    document.getElementById('contactsLockError').style.display = '';
+  }
+}
+document.getElementById('contactsUnlockBtn').onclick = tryContactsUnlock;
+document.getElementById('contactsPassword').addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryContactsUnlock(); });
 
 document.querySelectorAll('.kidtab').forEach(b=>{
   b.onclick = ()=>{
