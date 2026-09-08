@@ -239,6 +239,20 @@ textarea.notebox{ resize:vertical; min-height:38px; }
   -webkit-background-clip:text; background-clip:text; color:transparent;
 }
 
+.worktable-wrap{
+  background:var(--paper); border:1px solid var(--line); border-radius:12px; overflow:hidden;
+}
+.worktable{ width:100%; border-collapse:collapse; font-size:13.5px; }
+.worktable th{
+  background:var(--granny); color:#fff; text-align:left; padding:10px 12px;
+  font-size:12px; text-transform:uppercase; letter-spacing:0.04em; font-family:'Karla'; font-weight:700;
+}
+.worktable td{ padding:10px 12px; border-top:1px solid var(--line); }
+.worktable tbody tr:nth-child(even) td{ background:var(--bg); }
+.worktable td.dayoff.off{ color:var(--closed-deep,#A3103A); font-weight:700; }
+.worktable td.dayoff.eve{ color:var(--gaga-deep); font-weight:700; }
+.worktable td.dayoff.working{ color:#2C5C2E; font-weight:700; }
+
 @media print{
   .top, .todaybanner, .subnav, .weeknav, #printBtn{ display:none !important; }
   body{ padding:0; background:#fff; }
@@ -279,6 +293,7 @@ textarea.notebox{ resize:vertical; min-height:38px; }
     <button class="active" data-view="weekly">Weekly rhythm</button>
     <button data-view="upcoming">Upcoming</button>
     <button data-view="calendar">Holiday calendar</button>
+    <button data-view="work">Dad's work holidays</button>
     <button data-view="menu" id="menuNavBtn">Activity menu</button>
     <button data-view="contacts" id="contactsNavBtn">Class contacts</button>
   </div>
@@ -318,6 +333,23 @@ textarea.notebox{ resize:vertical; min-height:38px; }
     </div>
     <div class="calgrid" id="calGrid"></div>
     <div class="detailbox" id="calDetail">Click a highlighted day to see details.</div>
+  </div>
+
+  <div id="workView" class="view">
+    <p class="hint" style="margin-top:0;">Dad's holiday schedule at CONNACT, Tishrei 2026.</p>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--closed)"></i> Day off</span>
+      <span><i class="dot" style="background:var(--noact)"></i> Holiday eve (Friday)</span>
+      <span><i class="dot" style="background:var(--open)"></i> Working day</span>
+    </div>
+    <div class="worktable-wrap">
+      <table class="worktable">
+        <thead>
+          <tr><th>Holiday</th><th>Day of the week</th><th>Date</th><th>Day off</th></tr>
+        </thead>
+        <tbody id="workTableBody"></tbody>
+      </table>
+    </div>
   </div>
 
   <div id="menuView" class="view">
@@ -438,6 +470,19 @@ const JOSH_HOLIDAYS = [
   {s:'2027-05-12',e:'2027-05-12',en:'Independence Day',he:'יום העצמאות',type:'closed'},
   {s:'2027-06-10',e:'2027-06-11',en:'Shavuot',he:'חג השבועות',type:'closed'},
   {s:'2027-07-01',e:'2027-08-08',en:'Summer camp',he:'קייטנת קיץ',type:'camp'}
+];
+
+const DAD_WORK_HOLIDAYS = [
+  {holiday:'Rosh Hashana Eve', day:'Friday', date:'11/09/26', desc:'Day off – Public holiday', type:'off'},
+  {holiday:'Rosh Hashana', day:'Saturday', date:'12/09/26', desc:'Day off – Public holiday', type:'off'},
+  {holiday:'Rosh Hashana', day:'Sunday', date:'13/09/26', desc:'Day off – Public holiday', type:'off'},
+  {holiday:"Yom Kippur Eve", day:'Sunday', date:'20/09/26', desc:"Day off – CONNACT's expense", type:'off'},
+  {holiday:'Yom Kippur', day:'Monday', date:'21/09/26', desc:'Day off – Yom Kippur', type:'off'},
+  {holiday:'Sukkot Eve', day:'Friday', date:'25/09/26', desc:'Holiday Eve – Friday', type:'eve'},
+  {holiday:'Sukkot', day:'Saturday', date:'26/09/26', desc:'Day off – Public holiday', type:'off'},
+  {holiday:'Chol Hamoed – Sukkot', day:'Sunday–Thursday', date:'27/09–01/10/26', desc:'Working days', type:'working'},
+  {holiday:'Second day holiday eve – Hoshana Rabbah', day:'Friday', date:'02/10/26', desc:'Holiday Eve – Friday', type:'eve'},
+  {holiday:'Simchat Torah', day:'Saturday', date:'03/10/26', desc:'Day off – Public holiday', type:'off'}
 ];
 
 const CLASS_CONTACTS = [
@@ -591,9 +636,17 @@ function setView(v){
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.getElementById(v+'View').classList.add('active');
   if(v==='calendar') renderCalendar();
+  if(v==='work') renderWorkHolidays();
   if(v==='menu') renderMenuRef();
   if(v==='contacts') renderContactsLockState();
   if(v==='upcoming') renderUpcoming();
+}
+
+function renderWorkHolidays(){
+  const body = document.getElementById('workTableBody');
+  body.innerHTML = DAD_WORK_HOLIDAYS.map(row=>{
+    return `<tr><td>${row.holiday}</td><td>${row.day}</td><td>${row.date}</td><td class="dayoff ${row.type}">${row.desc}</td></tr>`;
+  }).join('');
 }
 
 function renderWeekNav(){
