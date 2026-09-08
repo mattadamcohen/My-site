@@ -560,24 +560,17 @@ function renderTodayBanner(){
   el.innerHTML = `<span class="todaydate">${dateLabel}</span> — ${parts.join(' &nbsp;|&nbsp; ')}`;
 }
 
-let saveRetryTimer = null;
-async function saveState(){
+function saveState(){
   renderTodayBanner();
   try{
-    await window.storage.set('family-tracker-state', JSON.stringify(state), false);
-  }catch(e){
-    if(saveRetryTimer) clearTimeout(saveRetryTimer);
-    saveRetryTimer = setTimeout(async ()=>{
-      try{ await window.storage.set('family-tracker-state', JSON.stringify(state), false); }
-      catch(e2){ }
-    }, 1500);
-  }
+    localStorage.setItem('family-tracker-state', JSON.stringify(state));
+  }catch(e){ }
 }
-async function loadState(){
+function loadState(){
   try{
-    const r = await window.storage.get('family-tracker-state', false);
-    if(r && r.value){
-      const loaded = JSON.parse(r.value);
+    const raw = localStorage.getItem('family-tracker-state');
+    if(raw){
+      const loaded = JSON.parse(raw);
       state = Object.assign(state, loaded);
     }
   }catch(e){ }
