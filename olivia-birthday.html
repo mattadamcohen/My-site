@@ -60,11 +60,54 @@ h1,h2,h3{ font-family:'Baloo 2', cursive; margin:0; }
   100%{ transform:translateY(110vh) rotate(360deg); opacity:.9; }
 }
 
+/* ---------- Lock screen ---------- */
+.lock{
+  position:fixed; inset:0; z-index:10;
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(160deg,#FFE1EE 0%,#FFF3D6 45%,#DFF6FF 100%);
+  padding:20px;
+}
+.lock.hidden{ display:none; }
+.lock-card{
+  background:var(--paper); border-radius:28px; padding:38px 32px;
+  max-width:340px; width:100%; text-align:center;
+  box-shadow:0 20px 50px rgba(155,93,229,.28);
+  border:3px solid var(--purple);
+}
+.lock-card .emoji{ font-size:44px; margin-bottom:6px; }
+.lock-card h2{
+  font-size:26px;
+  background:linear-gradient(90deg,var(--pink) 0%,var(--purple) 60%,var(--blue) 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  margin-bottom:8px;
+}
+.lock-card p{ font-size:14px; font-weight:600; opacity:.75; margin-bottom:20px; }
+#lockInput{
+  width:100%; font-family:'Baloo 2', cursive; font-size:28px; letter-spacing:10px; text-align:center;
+  padding:12px 10px; border-radius:14px; border:3px solid var(--blue); outline:none;
+  margin-bottom:14px; color:var(--ink); background:#F7FBFF;
+}
+#lockInput:focus{ border-color:var(--pink); }
+.lock-card button{
+  width:100%; padding:12px; border:none; border-radius:999px; cursor:pointer;
+  font-family:'Baloo 2', cursive; font-weight:700; font-size:17px; color:#fff;
+  background:linear-gradient(90deg,var(--pink) 0%,var(--purple) 100%);
+  box-shadow:0 8px 18px rgba(224,54,123,.35);
+}
+.lock-card button:active{ transform:translateY(1px); }
+.lock-error{
+  margin-top:12px; font-size:13px; font-weight:700; color:var(--pink-deep); display:none;
+}
+.lock-error.show{ display:block; }
+
+/* ---------- Main content ---------- */
 .wrap{
+  display:none;
   position:relative; z-index:1;
   max-width:780px; margin:0 auto; padding:48px 20px 70px;
   text-align:center;
 }
+.wrap.show{ display:block; }
 
 .eyebrow{
   display:inline-block; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;
@@ -79,21 +122,40 @@ h1,h2,h3{ font-family:'Baloo 2', cursive; margin:0; }
   margin-bottom:6px;
 }
 .subtitle{
-  font-size:clamp(16px,3vw,22px); font-weight:600; color:var(--ink); opacity:.85; margin-bottom:34px;
+  font-size:clamp(16px,3vw,22px); font-weight:600; color:var(--ink); opacity:.85; margin-bottom:30px;
 }
 .subtitle b{ color:var(--pink-deep); }
 
-.photo-frame{
-  width:180px; height:180px; margin:0 auto 30px; border-radius:50%;
-  background:var(--paper); border:6px solid #fff;
-  box-shadow:0 0 0 6px var(--yellow), 0 14px 30px rgba(155,93,229,.25);
-  display:flex; align-items:center; justify-content:center; overflow:hidden;
-  position:relative;
+/* photo gallery */
+.gallery{
+  position:relative; width:100%; max-width:420px; height:320px; margin:0 auto 28px;
+  border-radius:26px; overflow:hidden; background:var(--paper);
+  border:6px solid #fff; box-shadow:0 0 0 6px var(--yellow), 0 14px 30px rgba(155,93,229,.25);
 }
-.photo-frame img{ width:100%; height:100%; object-fit:cover; display:block; }
-.photo-frame .placeholder{
-  font-size:70px; line-height:1;
+.gallery .slide{
+  position:absolute; inset:0; opacity:0; transition:opacity .7s ease;
+  display:flex; align-items:center; justify-content:center;
 }
+.gallery .slide.active{ opacity:1; }
+.gallery .slide img{ width:100%; height:100%; object-fit:cover; display:block; }
+.gallery .slide .fallback{
+  width:100%; height:100%; display:flex; align-items:center; justify-content:center;
+  font-size:64px;
+}
+.gallery .caption{
+  position:absolute; left:0; right:0; bottom:0;
+  background:linear-gradient(0deg,rgba(58,46,77,.72) 0%, rgba(58,46,77,0) 100%);
+  color:#fff; font-weight:700; font-size:13px; text-align:left;
+  padding:26px 16px 10px;
+  opacity:0; transition:opacity .5s ease;
+}
+.gallery .slide.active .caption{ opacity:1; }
+.gallery-dots{ display:flex; justify-content:center; gap:7px; margin-bottom:30px; }
+.gallery-dots span{
+  width:9px; height:9px; border-radius:50%; background:#fff; border:2px solid var(--purple); opacity:.5;
+  cursor:pointer; transition:opacity .2s ease, transform .2s ease;
+}
+.gallery-dots span.active{ opacity:1; background:var(--purple); transform:scale(1.2); }
 
 .countdown{
   display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin:0 auto 30px;
@@ -122,9 +184,7 @@ h1,h2,h3{ font-family:'Baloo 2', cursive; margin:0; }
   background:#fff; border:2px solid var(--yellow); border-radius:999px; padding:8px 20px; color:var(--ink);
 }
 
-.party{
-  display:none; margin-top:10px;
-}
+.party{ display:none; margin-top:10px; }
 .party.show{ display:block; }
 .party h2{
   font-size:clamp(30px,7vw,52px);
@@ -134,27 +194,34 @@ h1,h2,h3{ font-family:'Baloo 2', cursive; margin:0; }
 }
 .party p{ font-weight:700; font-size:18px; }
 
-.footer-note{
-  margin-top:40px; font-size:13px; color:var(--ink); opacity:.55;
-}
+.footer-note{ margin-top:40px; font-size:13px; color:var(--ink); opacity:.55; }
 </style>
 </head>
 <body>
 
 <div class="bg-deco" id="bgDeco"></div>
 
-<div class="wrap">
+<!-- Lock screen -->
+<div class="lock" id="lock">
+  <div class="lock-card">
+    <div class="emoji">🔒🎈</div>
+    <h2>Olivia's Birthday Site</h2>
+    <p>Enter the code to peek inside!</p>
+    <input id="lockInput" type="tel" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
+    <button id="lockBtn" type="button">Unlock 🎉</button>
+    <div class="lock-error" id="lockError">Oops, wrong code — try again!</div>
+  </div>
+</div>
+
+<div class="wrap" id="mainContent">
   <div class="eyebrow">🎉 Countdown Time 🎉</div>
   <h1 class="title">Olivia's Birthday!</h1>
   <p class="subtitle">Counting down to <b>Olivia's 6th Birthday</b> 🎂</p>
 
-  <div class="photo-frame" id="photoFrame">
-    <!--
-      To add Olivia's photo: put an image file named "olivia.jpg"
-      in the same folder as this page, then reload.
-    -->
-    <div class="placeholder">🦄</div>
+  <div class="gallery" id="gallery">
+    <!-- Slides populated by JS below -->
   </div>
+  <div class="gallery-dots" id="galleryDots"></div>
 
   <div class="countdown" id="countdown">
     <div class="unit"><div class="num" id="days">--</div><div class="label">Days</div></div>
@@ -174,6 +241,45 @@ h1,h2,h3{ font-family:'Baloo 2', cursive; margin:0; }
 </div>
 
 <script>
+/* ---------- Lock code ---------- */
+const LOCK_CODE = '8259';
+const lockEl = document.getElementById('lock');
+const mainEl = document.getElementById('mainContent');
+const lockInput = document.getElementById('lockInput');
+const lockBtn = document.getElementById('lockBtn');
+const lockError = document.getElementById('lockError');
+
+function unlock(){
+  lockEl.classList.add('hidden');
+  mainEl.classList.add('show');
+  try { localStorage.setItem('olivia-unlocked', 'yes'); } catch(e){}
+}
+
+function tryUnlock(){
+  if (lockInput.value.trim() === LOCK_CODE){
+    lockError.classList.remove('show');
+    unlock();
+  } else {
+    lockError.classList.add('show');
+    lockInput.value = '';
+    lockInput.focus();
+  }
+}
+
+lockBtn.addEventListener('click', tryUnlock);
+lockInput.addEventListener('keydown', function(e){ if (e.key === 'Enter') tryUnlock(); });
+
+(function initLock(){
+  let alreadyUnlocked = false;
+  try { alreadyUnlocked = localStorage.getItem('olivia-unlocked') === 'yes'; } catch(e){}
+  if (alreadyUnlocked){
+    unlock();
+  } else {
+    lockInput.focus();
+  }
+})();
+
+/* ---------- Countdown ---------- */
 // Olivia turns 6 on the first Sept 26 on/after her 6th-birthday year.
 // Countdown always targets the next upcoming September 26th, and the
 // age shown updates automatically each year.
@@ -225,19 +331,70 @@ function tick(){
 tick();
 setInterval(tick, 1000);
 
-// Photo: try to load olivia.jpg; fall back to placeholder emoji if missing.
-(function loadPhoto(){
-  const img = new Image();
-  img.onload = function(){
-    const frame = document.getElementById('photoFrame');
-    frame.innerHTML = '';
-    frame.appendChild(img);
-  };
-  img.onerror = function(){ /* keep placeholder */ };
-  img.src = 'olivia.jpg';
+/* ---------- Photo gallery ----------
+   Drop image files named olivia-1.jpg through olivia-5.jpg in this same
+   folder and they'll appear automatically. Until a file exists, a fun
+   placeholder icon is shown instead.
+*/
+const PHOTOS = [
+  { file: 'olivia-1.jpg', caption: 'Olivia & her brother making new scaly friends 🐍', fallback: '🐊' },
+  { file: 'olivia-2.jpg', caption: 'Dad braving the python — Olivia approves 🐍', fallback: '😄' },
+  { file: 'olivia-3.jpg', caption: 'Nose to nose with a new friend 🥰', fallback: '🐍' },
+  { file: 'olivia-4.jpg', caption: 'Safari hair, don’t care 🚙', fallback: '💨' },
+  { file: 'olivia-5.jpg', caption: 'All smiles out on safari ☀️', fallback: '😊' }
+];
+
+(function buildGallery(){
+  const gallery = document.getElementById('gallery');
+  const dotsWrap = document.getElementById('galleryDots');
+
+  PHOTOS.forEach((p, i) => {
+    const slide = document.createElement('div');
+    slide.className = 'slide' + (i === 0 ? ' active' : '');
+    slide.dataset.index = i;
+
+    const img = document.createElement('img');
+    img.src = p.file;
+    img.alt = p.caption;
+    img.onerror = function(){
+      slide.innerHTML = `<div class="fallback">${p.fallback}</div>`;
+      const cap = document.createElement('div');
+      cap.className = 'caption';
+      cap.textContent = p.caption;
+      slide.appendChild(cap);
+    };
+    slide.appendChild(img);
+
+    const cap = document.createElement('div');
+    cap.className = 'caption';
+    cap.textContent = p.caption;
+    slide.appendChild(cap);
+
+    gallery.appendChild(slide);
+
+    const dot = document.createElement('span');
+    dot.className = i === 0 ? 'active' : '';
+    dot.addEventListener('click', () => showSlide(i));
+    dotsWrap.appendChild(dot);
+  });
+
+  let current = 0;
+  function showSlide(i){
+    const slides = gallery.querySelectorAll('.slide');
+    const dots = dotsWrap.querySelectorAll('span');
+    slides[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = i;
+    slides[current].classList.add('active');
+    dots[current].classList.add('active');
+  }
+
+  setInterval(() => {
+    showSlide((current + 1) % PHOTOS.length);
+  }, 4500);
 })();
 
-// Floating balloons + confetti background
+/* ---------- Floating balloons + confetti background ---------- */
 (function deco(){
   const container = document.getElementById('bgDeco');
   const colors = ['#FF6FA5','#9B5DE5','#3FC1E9','#FFC93C','#2EE6A6'];
