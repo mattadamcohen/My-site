@@ -343,7 +343,7 @@ textarea.notebox{ resize:vertical; min-height:38px; }
       <p class="hint" id="contactsLockError" style="color:var(--closed); display:none; margin-top:10px;">Incorrect password.</p>
     </div>
     <div id="contactsContent" style="display:none;">
-      <p class="hint" style="margin-top:0;">Olivia's class contacts — for arranging playdates. Only names and phone numbers are kept here; double-check a number before relying on it.</p>
+      <p class="hint" id="contactsHint" style="margin-top:0;"></p>
       <input class="hourbox" id="contactSearch" placeholder="Search by child or family name" style="max-width:320px; margin-bottom:16px;">
       <div id="contactList"></div>
     </div>
@@ -495,6 +495,44 @@ const CLASS_CONTACTS = [
   {family:'תורקיה', kid:'זוהר רחל', pA:'אשרי', phA:'054-4451451', pB:'יניב', phB:'053-2202204'}
 ];
 
+const JOSH_CLASS_CONTACTS = [
+  {family:'אזולאי', kid:'רפאל חיים', pA:'אלמוג', phA:'053-3347330', pB:'נתנאל', phB:'052-5833778'},
+  {family:'אליהו', kid:'קרני', pA:'מאור', phA:'054-3454726', pB:'דרור', phB:'054-5591093'},
+  {family:'בילמן', kid:'ליבי', pA:'מריאנה', phA:'054-8167939', pB:'אדוארדו', phB:'054-9660769'},
+  {family:'בצלאל', kid:'תמר', pA:'שרית', phA:'050-8802534', pB:'שי', phB:'052-6900828'},
+  {family:'גבאי', kid:'נועם', pA:'לירן', phA:'054-5653611', pB:'בת-אל', phB:'050-8159122'},
+  {family:'גורטלר', kid:'אלון', pA:'בת-אל', phA:'052-5988603', pB:'מתן', phB:'050-9165483'},
+  {family:'גז', kid:'מעיין', pA:'ג׳סיקה', phA:'054-3139328', pB:'אילן', phB:'053-6564550'},
+  {family:'געש', kid:'בן', pA:'מיכל', phA:'058-7002727', pB:'גל', phB:'052-4822482'},
+  {family:'געש', kid:'ליה', pA:'מיכל', phA:'058-7002727', pB:'גל', phB:'052-4822482'},
+  {family:'גרינברג', kid:'ריו', pA:'נטלי', phA:'052-4710390', pB:'', phB:''},
+  {family:'הלוי', kid:'ליאו', pA:'אלכס', phA:'053-7914475', pB:'יהודה', phB:'054-5776697'},
+  {family:'וקסלר', kid:'עדן', pA:'סיגל', phA:'054-5566296', pB:'רואי', phB:'054-7750183'},
+  {family:'חייט', kid:'ליאורה', pA:'היידי', phA:'053-4982172', pB:'ג׳ונתן', phB:'053-2790993'},
+  {family:'חן', kid:'הללי אבן', pA:'אור', phA:'052-7503418', pB:'זהר', phB:'052-6464479'},
+  {family:'חנה-סב', kid:'ליאן', pA:'אולגה', phA:'050-9061091', pB:'יקיר', phB:'050-5703143'},
+  {family:'יאיון', kid:'נתן', pA:'סטפני', phA:'058-5009634', pB:'בנימין', phB:'052-6640921'},
+  {family:'כהן', kid:'אריאה', pA:'יובל', phA:'052-3800397', pB:'אביחי', phB:'052-7301119'},
+  {family:'כהן', kid:'ג׳וש', pA:'אשלי', phA:'054-2332099', pB:'מתיו', phB:'052-7345897'},
+  {family:'כץ', kid:'אלי', pA:'סנדרה', phA:'050-2424414', pB:'גיא', phB:'052-2935703'},
+  {family:'כץ', kid:'עידו', pA:'מזי', phA:'054-5748912', pB:'גיל', phB:'054-3452734'},
+  {family:'לוי', kid:'הילי', pA:'דניאל', phA:'054-5457939', pB:'רועי', phB:'052-4486027'},
+  {family:'לורנצי', kid:'גבריאל', pA:'תמרה', phA:'054-3452382', pB:'דניאל', phB:'054-3453135'},
+  {family:'מאור-טריפמן', kid:'מייקי', pA:'יובל', phA:'052-8139881', pB:'אלירן', phB:'054-4811066'},
+  {family:'מלכה', kid:'יעל', pA:'נועה', phA:'052-6550851', pB:'יוחאי', phB:'052-6721415'},
+  {family:'משולם', kid:'רון', pA:'רחל', phA:'053-7004745', pB:'גילאור', phB:'053-7004749'},
+  {family:'נהרי', kid:'איתן', pA:'ליאור', phA:'052-3523269', pB:'יובל', phB:'054-4822141'},
+  {family:'נוביס', kid:'עומר', pA:'ענבר', phA:'054-4288971', pB:'טים', phB:'050-7151181'},
+  {family:'סידה', kid:'נורי', pA:'יעל', phA:'054-5565135', pB:'', phB:''},
+  {family:'צ׳צ׳יק', kid:'יובל', pA:'אנה', phA:'054-5959348', pB:'טל', phB:'054-7547879'},
+  {family:'צ׳צ׳יק', kid:'עוז', pA:'אנה', phA:'054-5959348', pB:'טל', phB:'054-7547879'},
+  {family:'קורלנדר', kid:'נבו', pA:'הילה', phA:'054-7844766', pB:'יונתן', phB:'058-6690210'},
+  {family:'קיז', kid:'ארי', pA:'מעיין', phA:'052-8515154', pB:'דוד', phB:'054-9390123'},
+  {family:'קרנר', kid:'מיה', pA:'רעות', phA:'054-6560144', pB:'מור', phB:'054-3071036'},
+  {family:'שאשי', kid:'מיכאלה', pA:'אוריאל', phA:'050-8768486', pB:'דויד', phB:'052-5344763'},
+  {family:'שטרנפלד', kid:'מיה', pA:'אילה', phA:'052-6363939', pB:'נתנאל', phB:'052-4872319'}
+];
+
 let state = {
   currentKid:'olivia',
   currentView:'weekly',
@@ -603,8 +641,8 @@ function renderKidTabs(){
     b.classList.toggle('active', b.dataset.kid===state.currentKid);
   });
   document.getElementById('menuNavBtn').style.display = state.currentKid==='olivia' ? '' : 'none';
-  document.getElementById('contactsNavBtn').style.display = state.currentKid==='olivia' ? '' : 'none';
-  if(state.currentKid==='josh' && (state.currentView==='menu' || state.currentView==='contacts')){ setView('weekly'); }
+  if(state.currentKid==='josh' && state.currentView==='menu'){ setView('weekly'); }
+  if(state.currentView==='contacts'){ renderContactsLockState(); }
 }
 
 function setView(v){
@@ -929,10 +967,15 @@ function renderCalendar(){
 }
 
 function renderContacts(){
+  const kid = state.currentKid;
+  const kidLabel = kid==='olivia' ? 'Olivia' : 'Josh';
+  document.getElementById('contactsHint').textContent =
+    `${kidLabel}'s class contacts — for arranging playdates. Only names and phone numbers are kept here; double-check a number before relying on it.`;
+  const source = kid==='olivia' ? CLASS_CONTACTS : JOSH_CLASS_CONTACTS;
   const q = (document.getElementById('contactSearch').value || '').trim();
   const list = document.getElementById('contactList');
   list.innerHTML = '';
-  const filtered = CLASS_CONTACTS.filter(c=>{
+  const filtered = source.filter(c=>{
     if(!q) return true;
     return c.kid.includes(q) || c.family.includes(q);
   });
