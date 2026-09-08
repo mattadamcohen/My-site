@@ -225,6 +225,20 @@ textarea.notebox{ resize:vertical; min-height:38px; }
 }
 .lockbox h3{ font-size:17px; }
 
+.sitelock{
+  position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center;
+  z-index:100; padding:20px;
+}
+.sitelockbox{
+  background:var(--paper); border:1px solid var(--line); border-radius:16px;
+  padding:30px 26px; max-width:340px; width:100%; text-align:center;
+}
+.sitelockbox h1{
+  font-size:26px; margin-bottom:6px; font-family:'Fraunces',Georgia,serif; font-weight:600;
+  background:linear-gradient(90deg,#FF5A7A 0%,#A855F7 45%,#00B7B0 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+
 @media print{
   .top, .todaybanner, .subnav, .weeknav, #printBtn{ display:none !important; }
   body{ padding:0; background:#fff; }
@@ -235,7 +249,18 @@ textarea.notebox{ resize:vertical; min-height:38px; }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="sitelock" id="siteLock">
+  <div class="sitelockbox">
+    <h1>Family rhythm</h1>
+    <p class="hint" style="margin:4px 0 16px;">Enter the password to view this site.</p>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
+      <input class="hourbox" id="sitePassword" type="password" placeholder="Password" style="max-width:180px;">
+      <button class="addbtn" id="siteUnlockBtn">Unlock</button>
+    </div>
+    <p class="hint" id="siteLockError" style="color:var(--closed); display:none; margin-top:10px;">Incorrect password.</p>
+  </div>
+</div>
+<div class="wrap" id="siteWrap" style="display:none;">
 
   <div class="top">
     <div>
@@ -930,6 +955,30 @@ function tryContactsUnlock(){
 }
 document.getElementById('contactsUnlockBtn').onclick = tryContactsUnlock;
 document.getElementById('contactsPassword').addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryContactsUnlock(); });
+
+const SITE_PASSWORD = '8259';
+let siteUnlocked = false;
+try{ siteUnlocked = sessionStorage.getItem('siteUnlocked')==='1'; }catch(e){}
+
+function applySiteLockState(){
+  document.getElementById('siteLock').style.display = siteUnlocked ? 'none' : 'flex';
+  document.getElementById('siteWrap').style.display = siteUnlocked ? '' : 'none';
+}
+function trySiteUnlock(){
+  const input = document.getElementById('sitePassword');
+  if(input.value === SITE_PASSWORD){
+    siteUnlocked = true;
+    try{ sessionStorage.setItem('siteUnlocked','1'); }catch(e){}
+    document.getElementById('siteLockError').style.display = 'none';
+    input.value = '';
+    applySiteLockState();
+  } else {
+    document.getElementById('siteLockError').style.display = '';
+  }
+}
+document.getElementById('siteUnlockBtn').onclick = trySiteUnlock;
+document.getElementById('sitePassword').addEventListener('keydown', (e)=>{ if(e.key==='Enter') trySiteUnlock(); });
+applySiteLockState();
 
 document.querySelectorAll('.kidtab').forEach(b=>{
   b.onclick = ()=>{
