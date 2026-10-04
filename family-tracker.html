@@ -127,6 +127,7 @@ textarea.notebox{ resize:vertical; min-height:38px; }
   font-family:'Karla';
 }
 .slotpick:hover{ filter:brightness(0.95); }
+.slotpick.selected{ background:var(--open-tint); border-color:var(--open); color:#2C5C2E; }
 .closemodal{
   margin-top:14px; width:100%; padding:9px; border-radius:9px; border:1px solid var(--line);
   background:var(--bg); font-weight:700; cursor:pointer; font-family:'Karla';
@@ -871,6 +872,10 @@ function openActivityModal(dayIndex){
 }
 function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); }
 
+function isActivitySelected(dayIndex, name, time){
+  return (state.activities.olivia[dayIndex]||[]).some(a=>a.name===name && a.time===time);
+}
+
 function renderMenuRef(){
   const wrap = document.getElementById('menuRef');
   wrap.innerHTML = '';
@@ -878,26 +883,33 @@ function renderMenuRef(){
     const col = document.createElement('div');
     col.className='col';
     let html = `<h3>${d.en} <span style="color:var(--ink-soft); font-weight:400;">${d.he}</span></h3>`;
-    OLIVIA_MENU[i].forEach(item=>{
-      html += `<div class="menuitem"><div class="nm">${item.heart?'<span class="heart">&#9829;</span>':''}${item.name}</div>`;
-      item.slots.forEach(sl=>{
-        const label = sl.g ? `${sl.t} <span style="color:var(--ink-soft); font-weight:400;">(${sl.g})</span>` : sl.t;
-        html += `<div class="slotrow"><span>${label}</span><button class="slotpick" data-day="${i}" data-name="${item.name.replace(/"/g,'&quot;')}" data-time="${sl.t}">Add</button></div>`;
+    if(!OLIVIA_MENU[i]){
+      html += `<p class="hint" style="margin-top:0;">No צהרון program on Fridays.</p>`;
+    } else {
+      OLIVIA_MENU[i].forEach(item=>{
+        html += `<div class="menuitem"><div class="nm">${item.heart?'<span class="heart">&#9829;</span>':''}${item.name}</div>`;
+        item.slots.forEach(sl=>{
+          const label = sl.g ? `${sl.t} <span style="color:var(--ink-soft); font-weight:400;">(${sl.g})</span>` : sl.t;
+          const selected = isActivitySelected(i, item.name, sl.t);
+          html += `<div class="slotrow"><span>${label}</span><button class="slotpick${selected?' selected':''}" data-day="${i}" data-name="${item.name.replace(/"/g,'&quot;')}" data-time="${sl.t}">${selected?'Added ✓':'Add'}</button></div>`;
+        });
+        html += `</div>`;
       });
-      html += `</div>`;
-    });
+    }
     col.innerHTML = html;
     wrap.appendChild(col);
   });
   wrap.querySelectorAll('.slotpick').forEach(btn=>{
     btn.onclick = ()=>{
       const di = parseInt(btn.dataset.day,10);
-      state.activities.olivia[di].push({name:btn.dataset.name, time:btn.dataset.time});
+      const name = btn.dataset.name;
+      const time = btn.dataset.time;
+      const list = state.activities.olivia[di];
+      const idx = list.findIndex(a=>a.name===name && a.time===time);
+      if(idx>-1){ list.splice(idx,1); } else { list.push({name, time}); }
       saveState();
       renderWeekly();
-      btn.textContent='Added';
-      btn.disabled = true;
-      setTimeout(()=>{btn.textContent='Add'; btn.disabled=false;},900);
+      renderMenuRef();
     };
   });
 }
