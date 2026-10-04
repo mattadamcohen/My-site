@@ -177,6 +177,71 @@ textarea.notebox{ resize:vertical; min-height:38px; }
 .contactcard .parent a{ color:var(--dad-deep); text-decoration:none; font-weight:700; }
 .contactcard .parent a:hover{ text-decoration:underline; }
 
+.todaybanner{
+  background:var(--paper); border:1px solid var(--line); border-radius:10px;
+  padding:10px 16px; font-size:13.5px; margin-bottom:16px; display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+}
+.todaybanner .todaydate{ font-family:'Fraunces'; font-weight:600; font-size:14px; }
+.todaybanner b{ color:var(--ink); }
+
+.ovrow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.upcomingrow{
+  background:var(--paper); border:1px solid var(--line); border-radius:12px;
+  padding:12px 14px; margin-bottom:10px;
+}
+.uprow-head{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px; }
+.uprow-head .update{ font-family:'Fraunces'; font-weight:600; font-size:15px; }
+.upinfo{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:13px; color:var(--ink-soft); }
+.daytag{
+  font-size:11.5px; font-weight:700; padding:5px 9px; border-radius:8px; margin:-2px 0 2px; display:inline-block;
+}
+.daytag.closed{ background:var(--closed-tint); color:var(--closed); }
+.daytag.camp{ background:var(--camp-tint); color:var(--camp); }
+.daytag.noact{ background:var(--noact-tint); color:#8A6A00; }
+.daytag.open{ background:var(--open-tint); color:#2C5C2E; }
+
+.calday .dadmark{
+  position:absolute; top:6px; right:6px; width:10px; height:10px; border-radius:50%;
+  background:var(--dad); border:1.5px solid var(--paper);
+}
+.calday .dadmark.eve{ background:var(--paper); border:1.5px solid var(--dad); }
+.calday .custommark{
+  position:absolute; bottom:6px; right:6px; width:8px; height:8px; border-radius:50%;
+  background:var(--granny);
+}
+.customwrap{ margin-top:12px; padding-top:10px; border-top:1px dashed var(--line); }
+.customrow{
+  display:flex; justify-content:space-between; align-items:center; gap:8px;
+  background:var(--granny-tint); border:1px solid var(--granny); color:var(--granny-deep);
+  border-radius:8px; padding:5px 9px; font-size:12.5px; font-weight:700; margin-bottom:6px;
+}
+.customrow .rm{ cursor:pointer; opacity:0.6; font-weight:700; }
+.customrow .rm:hover{ opacity:1; }
+.customadd{ display:flex; gap:8px; margin-top:6px; }
+.customadd input{ flex:1; }
+
+.sitelock{
+  position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center;
+  z-index:100; padding:20px;
+}
+.sitelockbox{
+  background:var(--paper); border:1px solid var(--line); border-radius:16px;
+  padding:30px 26px; max-width:340px; width:100%; text-align:center;
+}
+.sitelockbox h1{
+  font-size:26px; margin-bottom:6px; font-family:'Fraunces',Georgia,serif; font-weight:600;
+  background:linear-gradient(90deg,#FF5A7A 0%,#A855F7 45%,#00B7B0 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+
+@media print{
+  .top, .todaybanner, .subnav, #printBtn, #chatFab, #chatPanel{ display:none !important; }
+  body{ padding:0; background:#fff; }
+  .view{ display:none !important; }
+  #upcomingView{ display:block !important; }
+  .upcomingrow{ break-inside:avoid; border-color:#999; }
+}
+
 #chatFab{
   position:fixed; bottom:20px; right:20px; z-index:60;
   background:var(--granny); color:#fff; border:none; border-radius:999px;
@@ -218,7 +283,18 @@ textarea.notebox{ resize:vertical; min-height:38px; }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="sitelock" id="siteLock">
+  <div class="sitelockbox">
+    <h1>Family rhythm</h1>
+    <p class="hint" style="margin:4px 0 16px;">Enter the code to view this site.</p>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
+      <input class="hourbox" id="sitePassword" type="password" placeholder="Code" style="max-width:180px;">
+      <button class="addbtn" id="siteUnlockBtn">Unlock</button>
+    </div>
+    <p class="hint" id="siteLockError" style="color:var(--closed); display:none; margin-top:10px;">Incorrect code.</p>
+  </div>
+</div>
+<div class="wrap" id="siteWrap" style="display:none;">
 
   <div class="top">
     <div>
@@ -231,8 +307,11 @@ textarea.notebox{ resize:vertical; min-height:38px; }
     </div>
   </div>
 
+  <div class="todaybanner" id="todayBanner"></div>
+
   <div class="subnav">
     <button class="active" data-view="weekly">Weekly rhythm</button>
+    <button data-view="upcoming">Upcoming</button>
     <button data-view="calendar">Holiday calendar</button>
     <button data-view="menu" id="menuNavBtn">Activity menu</button>
     <button data-view="contacts" id="contactsNavBtn">Class contacts</button>
@@ -247,12 +326,22 @@ textarea.notebox{ resize:vertical; min-height:38px; }
     <p class="hint" style="margin-top:4px;">Every day: siddur (+ kippah for boys) and a reading book, plus a sandwich, fruit, vegetable, and water bottle. Fridays: white shirt.</p>
   </div>
 
+  <div id="upcomingView" class="view">
+    <div class="ovrow" style="margin-bottom:14px; justify-content:space-between;">
+      <p class="hint" style="margin:0;">The next 7 days at a glance — handy for a caregiver who needs the whole picture.</p>
+      <button class="addbtn" id="printBtn">Print schedule</button>
+    </div>
+    <div id="upcomingList"></div>
+  </div>
+
   <div id="calendarView" class="view">
     <div class="legend">
       <span><i class="dot" style="background:var(--closed)"></i> Closed / holiday</span>
       <span><i class="dot" style="background:var(--camp)"></i> Camp / extended activities</span>
       <span><i class="dot" style="background:var(--noact)"></i> Open, but no after-school activities</span>
       <span><i class="dot" style="background:var(--open)"></i> Regular day</span>
+      <span><i class="dot" style="background:var(--dad)"></i> Dad off work</span>
+      <span><i class="dot" style="background:var(--granny)"></i> Personal task/reminder</span>
     </div>
     <div class="calnav">
       <button id="prevMonth">&larr;</button>
@@ -260,7 +349,7 @@ textarea.notebox{ resize:vertical; min-height:38px; }
       <button id="nextMonth">&rarr;</button>
     </div>
     <div class="calgrid" id="calGrid"></div>
-    <div class="detailbox" id="calDetail">Click a highlighted day to see details.</div>
+    <div class="detailbox" id="calDetail">Click any day to see details, or add your own task or reminder to it.</div>
   </div>
 
   <div id="menuView" class="view">
@@ -460,6 +549,18 @@ const JOSH_HOLIDAYS = [
   {s:'2027-07-01',e:'2027-08-08',en:'Summer camp',he:'קייטנת קיץ',type:'camp'}
 ];
 
+const DAD_WORK_HOLIDAYS = [
+  {s:'2026-09-11', e:'2026-09-11', en:'Rosh Hashana Eve', desc:'Day off – Public holiday', type:'off'},
+  {s:'2026-09-12', e:'2026-09-13', en:'Rosh Hashana', desc:'Day off – Public holiday', type:'off'},
+  {s:'2026-09-20', e:'2026-09-20', en:'Yom Kippur Eve', desc:"Day off – CONNACT's expense", type:'off'},
+  {s:'2026-09-21', e:'2026-09-21', en:'Yom Kippur', desc:'Day off – Yom Kippur', type:'off'},
+  {s:'2026-09-25', e:'2026-09-25', en:'Sukkot Eve', desc:'Holiday Eve – Friday', type:'eve'},
+  {s:'2026-09-26', e:'2026-09-26', en:'Sukkot', desc:'Day off – Public holiday', type:'off'},
+  {s:'2026-09-27', e:'2026-10-01', en:'Chol Hamoed – Sukkot', desc:'Working days', type:'working'},
+  {s:'2026-10-02', e:'2026-10-02', en:'Hoshana Rabbah eve', desc:'Holiday Eve – Friday', type:'eve'},
+  {s:'2026-10-03', e:'2026-10-03', en:'Simchat Torah', desc:'Day off – Public holiday', type:'off'}
+];
+
 const CLASS_CONTACTS = [
   {family:'אבוטבול', kid:'נתנאל', pA:'פאינה', phA:'052-7867326', pB:'ישראל', phB:'050-5612746'},
   {family:'אברהמוב', kid:'אדל נליה', pA:'סשה אמלי', phA:'050-7624336', pB:'יהונתן', phB:'050-4441987'},
@@ -537,32 +638,70 @@ let state = {
   caregivers:{olivia:JSON.parse(JSON.stringify(DEFAULT_CAREGIVERS)), josh:JSON.parse(JSON.stringify(DEFAULT_CAREGIVERS))},
   hours:{olivia:{0:'',1:'',2:'',3:'',4:'',5:''}, josh:{0:'',1:'',2:'',3:'',4:'',5:''}},
   notes:{olivia:{0:'',1:'',2:'',3:'',4:'',5:''}, josh:{0:'',1:'',2:'',3:'',4:'',5:''}},
-  activities:{olivia:{0:[],1:[],2:[],3:[],4:[],5:[]}}
+  activities:{olivia:{0:[],1:[],2:[],3:[],4:[],5:[]}},
+  customEvents:{}
 };
 
 let calMonth = new Date(2026,8,1);
 let pendingDayIndex = null;
 
-let saveRetryTimer = null;
-async function saveState(){
+function saveState(){
+  renderTodayBanner();
   try{
-    await window.storage.set('family-tracker-state', JSON.stringify(state), false);
-  }catch(e){
-    if(saveRetryTimer) clearTimeout(saveRetryTimer);
-    saveRetryTimer = setTimeout(async ()=>{
-      try{ await window.storage.set('family-tracker-state', JSON.stringify(state), false); }
-      catch(e2){ }
-    }, 1500);
-  }
+    localStorage.setItem('family-tracker-state', JSON.stringify(state));
+  }catch(e){ }
 }
-async function loadState(){
+function loadState(){
   try{
-    const r = await window.storage.get('family-tracker-state', false);
-    if(r && r.value){
-      const loaded = JSON.parse(r.value);
+    const raw = localStorage.getItem('family-tracker-state');
+    if(raw){
+      const loaded = JSON.parse(raw);
       state = Object.assign(state, loaded);
     }
   }catch(e){ }
+}
+
+function addDays(d, n){
+  const nd = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  nd.setDate(nd.getDate() + n);
+  return nd;
+}
+
+function getCustomEvents(iso){
+  return state.customEvents[iso] || [];
+}
+function addCustomEvent(iso, text){
+  if(!state.customEvents[iso]) state.customEvents[iso] = [];
+  state.customEvents[iso].push({id: Date.now()+'-'+Math.random().toString(36).slice(2), text});
+  saveState();
+}
+function removeCustomEvent(iso, id){
+  if(!state.customEvents[iso]) return;
+  state.customEvents[iso] = state.customEvents[iso].filter(e=>e.id!==id);
+  if(state.customEvents[iso].length===0) delete state.customEvents[iso];
+  saveState();
+}
+
+function renderTodayBanner(){
+  const el = document.getElementById('todayBanner');
+  if(!el) return;
+  const today = new Date();
+  const dow = today.getDay();
+  const dateLabel = today.toLocaleDateString('en-US',{weekday:'long', month:'short', day:'numeric'});
+  const parts = ['olivia','josh'].map(kid=>{
+    const label = kid==='olivia' ? 'Olivia' : 'Josh';
+    if(dow===6){ return `<b>${label}:</b> weekend, no school`; }
+    const iso = toISO(today.getFullYear(), today.getMonth(), today.getDate());
+    const hol = (kid==='olivia' ? OLIVIA_HOLIDAYS : JOSH_HOLIDAYS).find(h=> iso>=h.s && iso<=h.e);
+    if(hol){
+      const hrs = hol.hours ? ` (${hol.hours})` : '';
+      return `<b>${label}:</b> ${hol.en}${hrs}`;
+    }
+    const cg = (state.caregivers[kid][dow]||[]).map(c=>CAREGIVERS[c].label).join(' & ') || 'no caregiver set';
+    const hrs = state.hours[kid][dow] ? ` · ${state.hours[kid][dow]}` : '';
+    return `<b>${label}:</b> ${cg}${hrs}`;
+  });
+  el.innerHTML = `<span class="todaydate">${dateLabel}</span> — ${parts.join(' &nbsp;|&nbsp; ')}`;
 }
 
 function renderKidTabs(){
@@ -585,17 +724,17 @@ function setView(v){
   if(v==='menu') renderMenuRef();
   if(v==='contacts') renderContacts();
   if(v==='joshcontacts') renderJoshContacts();
+  if(v==='upcoming') renderUpcoming();
 }
 
 function renderWeekly(){
   const kid = state.currentKid;
   const banner = document.getElementById('trialBanner');
-  if(kid==='olivia'){
-    banner.innerHTML = "<b>Trial period:</b> through end of September, Olivia can try any activity freely. <b>From October 1</b>, a fixed weekly selection needs to be chosen.";
-    banner.style.display = '';
-  } else {
+  if(kid==='josh'){
     banner.innerHTML = "<b>Josh</b> doesn't have extracurricular activities yet — this view just tracks school hours and who's around each afternoon.";
     banner.style.display = '';
+  } else {
+    banner.style.display = 'none';
   }
 
   const grid = document.getElementById('weekGrid');
@@ -769,6 +908,49 @@ function getHolidays(){ return state.currentKid==='olivia' ? OLIVIA_HOLIDAYS : J
 function findHoliday(iso){
   return getHolidays().find(h=> iso>=h.s && iso<=h.e);
 }
+function findDadWorkHoliday(iso){
+  return DAD_WORK_HOLIDAYS.find(h=> iso>=h.s && iso<=h.e);
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function showDayDetail(iso, hol, dadHol){
+  const label = new Date(iso+'T00:00:00').toLocaleDateString('en-US',{weekday:'long', month:'long', day:'numeric'});
+  let html = `<b>${label}</b>`;
+  if(hol){
+    const hrs = hol.hours ? ` · ${hol.hours}` : '';
+    html += `<br>${hol.en} — ${hol.he}${hrs}`;
+  }
+  if(dadHol){
+    html += `<br>Dad: ${dadHol.en} — ${dadHol.desc}`;
+  }
+  const customs = getCustomEvents(iso);
+  html += `<div class="customwrap"><div class="field-label">My tasks & reminders</div>`;
+  customs.forEach(ev=>{
+    html += `<div class="customrow"><span>${escapeHtml(ev.text)}</span><span class="rm" data-id="${ev.id}">&times;</span></div>`;
+  });
+  html += `<div class="customadd"><input class="hourbox" id="customTaskInput" placeholder="Add a task or reminder"><button class="addbtn" id="customTaskAddBtn">Add</button></div></div>`;
+  document.getElementById('calDetail').innerHTML = html;
+
+  document.querySelectorAll('#calDetail .customrow .rm').forEach(el=>{
+    el.onclick = ()=>{
+      removeCustomEvent(iso, el.dataset.id);
+      renderCalendar();
+      showDayDetail(iso, hol, dadHol);
+    };
+  });
+  const input = document.getElementById('customTaskInput');
+  const submit = ()=>{
+    const val = input.value.trim();
+    if(!val) return;
+    addCustomEvent(iso, val);
+    renderCalendar();
+    showDayDetail(iso, hol, dadHol);
+  };
+  document.getElementById('customTaskAddBtn').onclick = submit;
+  input.addEventListener('keydown', (e)=>{ if(e.key==='Enter') submit(); });
+}
 
 function renderCalendar(){
   const y = calMonth.getFullYear(), m = calMonth.getMonth();
@@ -786,19 +968,62 @@ function renderCalendar(){
   for(let d=1; d<=daysInMonth; d++){
     const iso = toISO(y,m,d);
     const hol = findHoliday(iso);
+    const dadHol = findDadWorkHoliday(iso);
+    const customs = getCustomEvents(iso);
     const el = document.createElement('div');
     el.className = 'calday' + (hol ? ' '+hol.type : '');
     let tag = '';
     if(hol){ tag = `<span class="tag">${hol.en}</span>`; }
-    el.innerHTML = `<span class="num">${d}</span>${tag}`;
-    if(hol){
-      el.style.cursor='pointer';
-      el.onclick = ()=>{
-        const hrs = hol.hours ? ` · ${hol.hours}` : '';
-        document.getElementById('calDetail').innerHTML = `<b>${hol.en}</b> — ${hol.he}${hrs}<br>${iso===hol.s && iso===hol.e ? iso : (hol.s+' to '+hol.e)}`;
-      };
-    }
+    const dadMark = (dadHol && dadHol.type!=='working') ? `<span class="dadmark${dadHol.type==='eve'?' eve':''}" title="Dad: ${dadHol.en}"></span>` : '';
+    const customMark = customs.length ? `<span class="custommark" title="${customs.length} task${customs.length===1?'':'s'}"></span>` : '';
+    el.innerHTML = `<span class="num">${d}</span>${tag}${dadMark}${customMark}`;
+    el.style.cursor='pointer';
+    el.onclick = ()=> showDayDetail(iso, hol, dadHol);
     grid.appendChild(el);
+  }
+}
+
+function renderUpcoming(){
+  const kid = state.currentKid;
+  const list = document.getElementById('upcomingList');
+  list.innerHTML = '';
+  for(let i=0;i<7;i++){
+    const dateObj = addDays(new Date(), i);
+    const dow = dateObj.getDay();
+    const iso = toISO(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+    const isWeekend = dow===6;
+    const hol = (kid==='olivia' ? OLIVIA_HOLIDAYS : JOSH_HOLIDAYS).find(h=> iso>=h.s && iso<=h.e);
+    const row = document.createElement('div');
+    row.className = 'upcomingrow';
+    const dateLabel = dateObj.toLocaleDateString('en-US',{weekday:'long', month:'short', day:'numeric'});
+    let html = `<div class="uprow-head"><span class="update">${i===0?'Today · ':''}${dateLabel}</span>`;
+    if(hol){
+      html += `<span class="daytag ${hol.type}">${hol.en}${hol.hours ? ' · '+hol.hours : ''}</span>`;
+    }
+    html += `</div>`;
+    if(isWeekend){
+      html += `<div class="hint" style="margin:0;">Weekend</div>`;
+    } else if(hol && hol.type==='closed'){
+      html += `<div class="hint" style="margin:0;">Closed — school holiday</div>`;
+    } else {
+      html += `<div class="upinfo">`;
+      const cg = state.caregivers[kid][dow]||[];
+      if(cg.length){
+        html += cg.map(c=>`<span class="cgchip on ${c}">${CAREGIVERS[c].label}</span>`).join(' ');
+      } else {
+        html += `No caregiver set`;
+      }
+      const hrs = kid==='olivia' && !state.hours.olivia[dow] && OLIVIA_SCHEDULE[dow] ? scheduleSpan(dow) : state.hours[kid][dow];
+      if(hrs) html += ` · ${hrs}`;
+      html += `</div>`;
+      if(kid==='olivia' && (state.activities.olivia[dow]||[]).length){
+        html += `<div class="activities" style="margin-top:8px;">` + state.activities.olivia[dow].map(a=>`<span class="actchip" style="cursor:default;">${a.name} · ${a.time}</span>`).join('') + `</div>`;
+      } else if(kid==='josh' && state.notes.josh[dow]){
+        html += `<div class="hint" style="margin-top:8px;">${state.notes.josh[dow]}</div>`;
+      }
+    }
+    row.innerHTML = html;
+    list.appendChild(row);
   }
 }
 
@@ -879,6 +1104,7 @@ document.querySelectorAll('.kidtab').forEach(b=>{
     renderWeekly();
     if(state.currentView==='calendar') renderCalendar();
     if(state.currentView==='menu') renderMenuRef();
+    if(state.currentView==='upcoming') renderUpcoming();
   };
 });
 document.querySelectorAll('.subnav button').forEach(b=>{
@@ -886,7 +1112,32 @@ document.querySelectorAll('.subnav button').forEach(b=>{
 });
 document.getElementById('prevMonth').onclick = ()=>{ calMonth.setMonth(calMonth.getMonth()-1); renderCalendar(); };
 document.getElementById('nextMonth').onclick = ()=>{ calMonth.setMonth(calMonth.getMonth()+1); renderCalendar(); };
+document.getElementById('printBtn').onclick = ()=>{ renderUpcoming(); window.print(); };
 document.getElementById('modalOverlay').onclick = (e)=>{ if(e.target.id==='modalOverlay') closeModal(); };
+
+const SITE_PASSWORD = '8259';
+let siteUnlocked = false;
+try{ siteUnlocked = sessionStorage.getItem('siteUnlocked')==='1'; }catch(e){}
+
+function applySiteLockState(){
+  document.getElementById('siteLock').style.display = siteUnlocked ? 'none' : 'flex';
+  document.getElementById('siteWrap').style.display = siteUnlocked ? '' : 'none';
+}
+function trySiteUnlock(){
+  const input = document.getElementById('sitePassword');
+  if(input.value === SITE_PASSWORD){
+    siteUnlocked = true;
+    try{ sessionStorage.setItem('siteUnlocked','1'); }catch(e){}
+    document.getElementById('siteLockError').style.display = 'none';
+    input.value = '';
+    applySiteLockState();
+  } else {
+    document.getElementById('siteLockError').style.display = '';
+  }
+}
+document.getElementById('siteUnlockBtn').onclick = trySiteUnlock;
+document.getElementById('sitePassword').addEventListener('keydown', (e)=>{ if(e.key==='Enter') trySiteUnlock(); });
+applySiteLockState();
 
 let chatHistory = [];
 function addChatMsg(text, cls){
@@ -956,10 +1207,11 @@ document.getElementById('chatClose').onclick = ()=>{
 document.getElementById('chatSend').onclick = sendChat;
 document.getElementById('chatInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') sendChat(); });
 
-(async function init(){
-  await loadState();
+(function init(){
+  loadState();
   renderKidTabs();
   renderWeekly();
+  renderTodayBanner();
 })();
 </script>
 </body>
