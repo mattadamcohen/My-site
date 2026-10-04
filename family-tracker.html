@@ -244,6 +244,7 @@ textarea.notebox{ resize:vertical; min-height:38px; }
     <div class="weekgrid" id="weekGrid"></div>
     <p class="hint">Saturday isn't tracked here (Shabbat). Tap a caregiver chip to toggle who's around that day.</p>
     <p class="hint" style="margin-top:4px;">Olivia's school hours & timetable are filled in from her Mashov schedule — edit anytime.</p>
+    <p class="hint" style="margin-top:4px;">Every day: siddur (+ kippah for boys) and a reading book, plus a sandwich, fruit, vegetable, and water bottle. Fridays: white shirt.</p>
   </div>
 
   <div id="calendarView" class="view">
@@ -324,53 +325,54 @@ const CAREGIVERS = {
 
 const DEFAULT_CAREGIVERS = {0:['dad'],1:['granny'],2:['mom'],3:['gaga','dad'],4:['mom'],5:[]};
 
-// Olivia's school timetable (Mashov, כיתה א2), Sunday–Friday
+// Olivia's school timetable (Mashov, כיתה א'2), Sunday–Friday
+// Updated from the teacher's weekly plan spreadsheet
 const OLIVIA_SCHEDULE = {
   0:[ // Sunday
-    {t:'08:00–08:45', subj:'שפה (Language)', who:'מעוז יעל'},
-    {t:'08:45–09:30', subj:'מתמטיקה (Math)', who:'מעוז יעל'},
-    {t:'10:00–11:00', subj:'מדעים (Science)', who:'אראבוב חנה'},
-    {t:'11:00–12:00', subj:'—', who:''},
-    {t:'12:00–12:45', subj:'מתמטיקה (Math)', who:'מעוז יעל'},
+    {t:'08:00–08:50', subj:'עברית (Hebrew) — חוויות מהחופשה, כתיבה במחברת חכמה', who:'מעוז יעל'},
+    {t:'08:50–09:40', subj:'עברית (Hebrew) — האות ח׳, חוברת ע\' 20-24', who:'מעוז יעל'},
+    {t:'10:10–11:00', subj:'מדעים (Science)', who:'אראבוב חנה'},
+    {t:'11:00–12:00', subj:'תל"ן (Enrichment) — מוסיקה יהודית', who:'אילן'},
+    {t:'12:00–12:45', subj:'חשבון (Math) — המספרים 6,7,8, ע\' 24-28', who:'מעוז יעל'},
     {t:'12:45–13:30', subj:'—', who:''}
   ],
   1:[ // Monday
-    {t:'08:00–08:45', subj:'חינוך (Homeroom)', who:'מעוז יעל'},
-    {t:'08:45–09:30', subj:'שפה (Language)', who:'מעוז יעל'},
-    {t:'10:00–11:00', subj:'אומנות (Art)', who:'חורי אירית'},
-    {t:'11:00–12:00', subj:'מתמטיקה (Math)', who:'מעוז יעל'},
-    {t:'12:00–12:45', subj:'שפה (Language)', who:'מעוז יעל'},
+    {t:'08:00–08:50', subj:'טקס בית ספרי (School ceremony) — "מהזיכרון אל הצמיחה"', who:''},
+    {t:'08:50–09:40', subj:'עברית (Hebrew) — חיבור מילים בלוח המחיק, ע\' 25', who:'מעוז יעל'},
+    {t:'10:10–11:00', subj:'אומנות וספריה (Art & library)', who:'ענת'},
+    {t:'11:00–12:00', subj:'חשבון (Math) — המספרים 6,7,8, ע\' 29-34', who:'מעוז יעל'},
+    {t:'12:00–12:45', subj:'עברית (Hebrew) — דפי עבודה האות ח׳', who:'מעוז יעל'},
     {t:'12:45–13:30', subj:'—', who:''}
   ],
   2:[ // Tuesday
-    {t:'08:00–08:45', subj:'שפה (Language)', who:'מעוז יעל'},
-    {t:'08:45–09:30', subj:'מתמטיקה (Math)', who:'מעוז יעל'},
-    {t:'10:00–11:00', subj:'שפה (Language)', who:'מעוז יעל'},
+    {t:'08:00–08:50', subj:'עברית (Hebrew) — האות ב׳, חוברת ע\' 26-29', who:'מעוז יעל'},
+    {t:'08:50–09:40', subj:'עברית (Hebrew) — משפטים מצחיקים ושטוזים, ע\' 30-31', who:'מעוז יעל'},
+    {t:'10:10–11:00', subj:'חשבון (Math) — משימות תרגול, ע\' 35-36', who:'מעוז יעל'},
     {t:'11:00–12:00', subj:'זה"ב (Road safety)', who:'אראבוב חנה'},
-    {t:'12:00–12:45', subj:'חנ"ג (P.E.)', who:'אדרי אווה'},
-    {t:'12:45–13:30', subj:'תנ"ך (Bible)', who:'אראבוב חנה'}
+    {t:'12:00–12:45', subj:'חנ"ג (P.E.) — להביא נעלי ספורט', who:'אדרי אווה'},
+    {t:'12:45–13:30', subj:'תורה (Torah)', who:'אראבוב חנה וענת'}
   ],
   3:[ // Wednesday
-    {t:'08:00–08:45', subj:'תל"ן פרשת שבוע', who:'ספק פולה'},
-    {t:'08:45–09:30', subj:'מולדת (Homeland studies)', who:'גולדברג אלכסנדר מלאני'},
-    {t:'10:00–11:00', subj:'מוסיקה (Music)', who:'מישאל מאור'},
-    {t:'11:00–12:00', subj:'כישורי חיים (Life skills)', who:'סולומון גוטליב ימית'},
-    {t:'12:00–12:45', subj:'תל"ן עיון תפילה', who:'ספק פולה'},
+    {t:'08:00–08:50', subj:'תל"ן פרשת שבוע (Enrichment)', who:'ספק פולה'},
+    {t:'08:50–09:40', subj:'מולדת (Homeland studies)', who:'גולדברג אלכסנדר מלאני'},
+    {t:'10:10–11:00', subj:'מוסיקה (Music)', who:'מישאל מאור'},
+    {t:'11:00–12:00', subj:'כישורי חיים (Life skills) — תכנית שנתית: ארץ יצורי הנפש', who:'סולומון גוטליב ימית'},
+    {t:'12:00–12:45', subj:'תל"ן עיון תפילה (Enrichment)', who:'ספק פולה'},
     {t:'12:45–13:30', subj:'—', who:''}
   ],
   4:[ // Thursday
-    {t:'08:00–08:45', subj:'שפה (Language)', who:'מעוז יעל'},
-    {t:'08:45–09:30', subj:'בשבילי מורשת (Heritage)', who:'מעוז יעל'},
-    {t:'10:00–11:00', subj:'מדעים (Science)', who:'אראבוב חנה'},
-    {t:'11:00–12:00', subj:'חנ"ג (P.E.)', who:'אדרי אווה'},
-    {t:'12:00–12:45', subj:'שפה (Language)', who:'מעוז יעל'},
+    {t:'08:00–08:50', subj:'עברית (Hebrew) — האות א׳, ע\' 32-34', who:'מעוז יעל'},
+    {t:'08:50–09:40', subj:'בשבילי מורשת (Heritage) — "מהזיכרון אל הצמיחה"', who:'מעוז יעל'},
+    {t:'10:10–11:00', subj:'מדעים (Science)', who:'אראבוב חנה'},
+    {t:'11:00–12:00', subj:'חנ"ג (P.E.) — להביא נעלי ספורט', who:'אדרי אווה'},
+    {t:'12:00–12:45', subj:'חשבון (Math) — המספרים 9,10, ע\' 37-39', who:'מעוז יעל'},
     {t:'12:45–13:30', subj:'—', who:''}
   ],
   5:[ // Friday
-    {t:'08:00–08:45', subj:'תפילה (Prayer)', who:'מעוז יעל'},
-    {t:'08:45–09:30', subj:'שפה (Language)', who:'מעוז יעל'},
-    {t:'10:00–11:00', subj:'מתמטיקה (Math)', who:'מעוז יעל'},
-    {t:'11:00–12:00', subj:'שפה (Language)', who:'מעוז יעל'}
+    {t:'08:00–08:50', subj:'טקס בית ספרי (School ceremony) — טקס תוצרים, חולצה לבנה', who:''},
+    {t:'08:50–09:40', subj:'עברית (Hebrew) — כתיבה במחברת חכמה ולוח מחיק', who:'מעוז יעל'},
+    {t:'10:10–11:00', subj:'חשבון (Math) — המספרים 9,10, ע\' 40-45', who:'מעוז יעל'},
+    {t:'11:00–12:00', subj:'קבלת שבת (Kabbalat Shabbat) — פרשת השבוע: בראשית', who:'מעוז יעל'}
   ]
 };
 function scheduleSpan(dayIndex){
