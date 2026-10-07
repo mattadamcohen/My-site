@@ -210,6 +210,10 @@ textarea.notebox{ resize:vertical; min-height:38px; }
   position:absolute; bottom:6px; right:6px; width:8px; height:8px; border-radius:50%;
   background:var(--granny);
 }
+.calday .noticemark{
+  position:absolute; bottom:6px; left:6px; width:8px; height:8px; border-radius:50%;
+  background:var(--mom);
+}
 .customwrap{ margin-top:12px; padding-top:10px; border-top:1px dashed var(--line); }
 .customrow{
   display:flex; justify-content:space-between; align-items:center; gap:8px;
@@ -220,6 +224,11 @@ textarea.notebox{ resize:vertical; min-height:38px; }
 .customrow .rm:hover{ opacity:1; }
 .customadd{ display:flex; gap:8px; margin-top:6px; }
 .customadd input{ flex:1; }
+.noticerow{
+  background:var(--mom-tint); border:1px solid var(--mom); color:var(--mom-deep);
+  border-radius:8px; padding:7px 9px; font-size:12.5px; margin-bottom:6px; line-height:1.45;
+}
+.noticerow b{ font-size:12.5px; }
 
 .sitelock{
   position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center;
@@ -343,6 +352,7 @@ textarea.notebox{ resize:vertical; min-height:38px; }
       <span><i class="dot" style="background:var(--open)"></i> Regular day</span>
       <span><i class="dot" style="background:var(--dad)"></i> Dad off work</span>
       <span><i class="dot" style="background:var(--granny)"></i> Personal task/reminder</span>
+      <span><i class="dot" style="background:var(--mom)"></i> School notice</span>
     </div>
     <div class="calnav">
       <button id="prevMonth">&larr;</button>
@@ -561,6 +571,15 @@ const DAD_WORK_HOLIDAYS = [
   {s:'2026-10-02', e:'2026-10-02', en:'Hoshana Rabbah eve', desc:'Holiday Eve – Friday', type:'eve'},
   {s:'2026-10-03', e:'2026-10-03', en:'Simchat Torah', desc:'Day off – Public holiday', type:'off'}
 ];
+
+const SCHOOL_NOTICES = [
+  {s:'2026-10-12', e:'2026-10-12', he:'אסיפת הורים בצהרון', en:"Tzohoron parent meeting, 15:45–16:45, with Ruhamit & Nirit — settling back into routine after the holidays, Q&A with staff."},
+  {s:'2026-10-21', e:'2026-10-21', he:"בדיקות שמיעה לשכבת א'", en:"Grade 1 hearing screening at school, by a communication clinician from Femi Health. Fill out the student health declaration in the Ministry of Education parent portal beforehand. To object, message the homeroom teacher via Mashov — not WhatsApp."},
+  {s:'2026-10-29', e:'2026-10-29', he:'ערב טעימות ושיחה פתוחה', en:"Ra'anana municipality info evening — health & nutrition in school tzohoron programs, menu tastings + open Q&A panel. 16:30 at Ariel School, Ra'anana. Open attendance, registration requested."}
+];
+function getNoticesFor(iso){
+  return SCHOOL_NOTICES.filter(n=> iso>=n.s && iso<=n.e);
+}
 
 const CLASS_CONTACTS = [
   {family:'אבוטבול', kid:'נתנאל', pA:'פאינה', phA:'052-7867326', pB:'ישראל', phB:'050-5612746'},
@@ -937,6 +956,14 @@ function showDayDetail(iso, hol, dadHol){
   if(dadHol){
     html += `<br>Dad: ${dadHol.en} — ${dadHol.desc}`;
   }
+  const notices = getNoticesFor(iso);
+  if(notices.length){
+    html += `<div class="customwrap"><div class="field-label">School notices</div>`;
+    notices.forEach(n=>{
+      html += `<div class="noticerow"><b>${n.he}</b><br>${n.en}</div>`;
+    });
+    html += `</div>`;
+  }
   const customs = getCustomEvents(iso);
   html += `<div class="customwrap"><div class="field-label">My tasks & reminders</div>`;
   customs.forEach(ev=>{
@@ -982,13 +1009,15 @@ function renderCalendar(){
     const hol = findHoliday(iso);
     const dadHol = findDadWorkHoliday(iso);
     const customs = getCustomEvents(iso);
+    const notices = getNoticesFor(iso);
     const el = document.createElement('div');
     el.className = 'calday' + (hol ? ' '+hol.type : '');
     let tag = '';
     if(hol){ tag = `<span class="tag">${hol.en}</span>`; }
     const dadMark = (dadHol && dadHol.type!=='working') ? `<span class="dadmark${dadHol.type==='eve'?' eve':''}" title="Dad: ${dadHol.en}"></span>` : '';
     const customMark = customs.length ? `<span class="custommark" title="${customs.length} task${customs.length===1?'':'s'}"></span>` : '';
-    el.innerHTML = `<span class="num">${d}</span>${tag}${dadMark}${customMark}`;
+    const noticeMark = notices.length ? `<span class="noticemark" title="${notices.map(n=>n.he).join(', ')}"></span>` : '';
+    el.innerHTML = `<span class="num">${d}</span>${tag}${dadMark}${customMark}${noticeMark}`;
     el.style.cursor='pointer';
     el.onclick = ()=> showDayDetail(iso, hol, dadHol);
     grid.appendChild(el);
@@ -1013,6 +1042,10 @@ function renderUpcoming(){
       html += `<span class="daytag ${hol.type}">${hol.en}${hol.hours ? ' · '+hol.hours : ''}</span>`;
     }
     html += `</div>`;
+    const notices = getNoticesFor(iso);
+    if(notices.length){
+      html += notices.map(n=>`<div class="noticerow"><b>${n.he}</b><br>${n.en}</div>`).join('');
+    }
     if(isWeekend){
       html += `<div class="hint" style="margin:0;">Weekend</div>`;
     } else if(hol && hol.type==='closed'){
